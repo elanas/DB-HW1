@@ -171,7 +171,9 @@ class PageHeader:
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
-    raise NotImplementedError
+    return self.freeSpaceOffset - self.size
+    
+    # raise NotImplementedError
 
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
@@ -367,6 +369,7 @@ class Page(BytesIO):
 
   def __next__(self):
     t = self.getTuple(TupleId(self.pageId, self.iterTupleIdx))
+    
     if t:
       self.iterTupleIdx += 1
       return t
@@ -387,18 +390,27 @@ class Page(BytesIO):
     tupleIndex = tupleId.tupleIndex
 
     view = self.getbuffer()
-    tupleBytes = view[tupleIndex:tupleIndex + self.header.tupleSize]
+    offset = tupleIndex * self.header.tupleSize + self.header.size
+    tupleBytes = view[offset: offset + self.header.tupleSize]
+
+    if tupleIndex >= self.header.numTuples():
+      return None
     return tupleBytes
     # raise NotImplementedError
 
   # Updates the (packed) tuple at the given tuple id.
   def putTuple(self, tupleId, tupleData):
-    raise NotImplementedError
+    offset = (tupleId.tupleIndex * self.header.tupleSize) + self.header.size
+
+    view = self.getbuffer()
+    view[offset:offset + self.header.tupleSize] = tupleData
+
+    # raise NotImplementedError
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
 
-    tupleID = TupleId(self.pageId,self.header.freeSpaceOffset)
+    tupleID = TupleId(self.pageId, self.header.numTuples())
 
     view = self.getbuffer()
     view[self.header.freeSpaceOffset:self.header.freeSpaceOffset + self.header.tupleSize] = tupleData
