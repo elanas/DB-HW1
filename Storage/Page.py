@@ -193,7 +193,12 @@ class PageHeader:
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
     offset = self.freeSpaceOffset
+
+    if offset + self.tupleSize >= self.pageCapacity:
+      return None
+
     self.freeSpaceOffset += self.tupleSize
+
 
     return offset
     # raise NotImplementedError
@@ -201,7 +206,10 @@ class PageHeader:
   # Returns a triple of (tupleIndex, start, end) for the next free tuple.
   # This should cal nextFreeTuple()
   def nextTupleRange(self):
-    raise NotImplementedError
+    start = self.nextFreeTuple()
+    end = start + self.tupleSize
+    return (self.numTuples(), start, end)
+    # raise NotImplementedError
 
   # Returns a binary representation of this page header.
   def pack(self):
