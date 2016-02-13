@@ -432,7 +432,22 @@ class Page(BytesIO):
 
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
-    raise NotImplementedError
+    tupleOff = (tupleId.tupleIndex * self.header.tupleSize) + self.header.size
+
+    view = self.getbuffer()
+
+    tuplesToShift = self.header.numTuples() - tupleId.tupleIndex - 1
+
+    for i in range(tupleOff,tupleOff + (tuplesToShift * self.header.tupleSize)):
+      view[i:i+1] = view[i+self.header.tupleSize:i+self.header.tupleSize + 1]
+
+    # for i in range(self.header.tupleSize * tuplesToShift, self.header.tupleSize * tuplesToShift + self.header.tupleSize):
+    #   view[i] = b'\x00'
+    toClearID = TupleId(self.pageId, self.header.numTuples()-1)
+    self.clearTuple(toClearID)
+
+    self.header.freeSpaceOffset -= self.header.tupleSize
+    # raise NotImplementedError
 
   # Returns a binary representation of this page.
   # This should refresh the binary representation of the page header contained
