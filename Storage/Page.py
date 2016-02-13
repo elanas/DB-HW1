@@ -128,7 +128,7 @@ class PageHeader:
     self.flags           = kwargs.get("flags", b'\x00')
     self.tupleSize       = kwargs.get("tupleSize", None)
     self.pageCapacity    = kwargs.get("pageCapacity", len(buffer))
-    self.freeSpaceOffset = None
+    self.freeSpaceOffset = self.size
     # raise NotImplementedError
 
   # Page header equality operation based on header fields.
@@ -408,6 +408,9 @@ class Page(BytesIO):
   def pack(self):
     
     view = self.getbuffer()
+
+    byteHeader = self.header.pack()
+    view[0:PageHeader.size] = byteHeader    
 
     return(view)
 
