@@ -148,7 +148,8 @@ class PageHeader:
     return hash((self.flags, self.tupleSize, self.pageCapacity, self.freeSpaceOffset))
 
   def headerSize(self):
-    raise NotImplementedError
+    return self.size
+    # raise NotImplementedError
 
   # Flag operations.
   def flag(self, mask):
@@ -173,7 +174,8 @@ class PageHeader:
 
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
-    raise NotImplementedError
+    return self.pageCapacity - (self.tupleSize * self.numTuples() + self.size)
+    # raise NotImplementedError
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
@@ -183,13 +185,18 @@ class PageHeader:
 
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
-    raise NotImplementedError
+    return self.freeSpace() >= self.tupleSize
+    # raise NotImplementedError
 
   # Returns the page offset of the next free tuple.
   # This should also "allocate" the tuple, such that any subsequent call
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
-    raise NotImplementedError
+    offset = self.freeSpaceOffset
+    self.freeSpaceOffset += self.tupleSize
+
+    return offset
+    # raise NotImplementedError
 
   # Returns a triple of (tupleIndex, start, end) for the next free tuple.
   # This should cal nextFreeTuple()
