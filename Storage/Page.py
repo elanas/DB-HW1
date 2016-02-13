@@ -384,7 +384,12 @@ class Page(BytesIO):
 
   # Returns a byte string representing a packed tuple for the given tuple id.
   def getTuple(self, tupleId):
-    raise NotImplementedError
+    tupleIndex = tupleId.tupleIndex
+
+    view = self.getbuffer()
+    tupleBytes = view[tupleIndex:tupleIndex + self.header.tupleSize]
+    return tupleBytes
+    # raise NotImplementedError
 
   # Updates the (packed) tuple at the given tuple id.
   def putTuple(self, tupleId, tupleData):
@@ -392,7 +397,16 @@ class Page(BytesIO):
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
-    raise NotImplementedError
+
+    tupleID = TupleId(self.pageId,self.header.freeSpaceOffset)
+
+    view = self.getbuffer()
+    view[self.header.freeSpaceOffset:self.header.freeSpaceOffset + self.header.tupleSize] = tupleData
+    self.header.freeSpaceOffset += self.header.tupleSize
+
+    return tupleID
+
+    # raise NotImplementedError
 
   # Zeroes out the contents of the tuple at the given tuple id.
   def clearTuple(self, tupleId):
@@ -422,7 +436,6 @@ class Page(BytesIO):
   def unpack(cls, pageId, buffer):
     
     pageHeader = PageHeader.unpack(buffer)
-
     return Page(pageId=pageId, buffer=buffer, header=pageHeader)
 
     # raise NotImplementedError
