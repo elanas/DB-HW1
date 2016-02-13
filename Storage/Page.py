@@ -422,7 +422,13 @@ class Page(BytesIO):
 
   # Zeroes out the contents of the tuple at the given tuple id.
   def clearTuple(self, tupleId):
-    raise NotImplementedError
+    tupleOffset = (tupleId.tupleIndex * self.header.tupleSize) + self.header.size
+
+    view = self.getbuffer()
+
+    for i in range(self.header.tupleSize):
+      view[i + tupleOffset : i + tupleOffset + 1] = b'\x00'
+    # raise NotImplementedError
 
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
