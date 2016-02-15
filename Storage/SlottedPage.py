@@ -26,6 +26,8 @@ class SlottedPageHeader(PageHeader):
   >>> buffer = io.BytesIO(bytes(4096))
   >>> ph     = SlottedPageHeader(buffer=buffer.getbuffer(), tupleSize=16)
   >>> ph2    = SlottedPageHeader.unpack(buffer.getbuffer())
+  >>> ph == ph2
+  True
 
   ## Dirty bit tests
   >>> ph.isDirty()
@@ -84,32 +86,35 @@ class SlottedPageHeader(PageHeader):
   """
 
 
-
   def __init__(self, **kwargs):
 
     buffer=kwargs.get("buffer", None)
-    bitmap=kwargs.get("bitmap", None)
+    self.bitmap=kwargs.get("bitmap", None)
 
     # buffer     = kwargs.get("buffer", None)
     # self.flags = kwargs.get("flags", b'\x00')
-    if buffer and bitmap == None:
+    if buffer and self.bitmap == None:
       bString = '0b' + ('0' * len(buffer))
       self.bitmap = BitArray(bString)
-
-      bufferLength = (len(buffer)//8) + 1
-
-      self.binrepr   = struct.Struct("cHHH" + str(bufferLength) + 's')
-      self.size      = self.binrepr.size
 
       # raise NotImplementedError
     elif buffer == None:
       raise ValueError("No backing buffer supplied for SlottedPageHeader")
     
+    bufferLength = (len(buffer)//8) + 1
+    self.binrepr   = struct.Struct("cHHH" + str(bufferLength) + 's')
+    self.size      = self.binrepr.size
+
     super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), 
-    tupleSize=kwargs.get("tupleSize", None))
+      tupleSize=kwargs.get("tupleSize", None))
   
   def __eq__(self, other):
-    raise NotImplementedError
+    # raise NotImplementedError
+    return (    self.flags == other.flags
+            and self.tupleSize == other.tupleSize
+            and self.pageCapacity == other.pageCapacity
+            and self.freeSpaceOffset == other.freeSpaceOffset 
+            and self.bitmap == other.bitmap)
 
   def __hash__(self):
     raise NotImplementedError
@@ -190,10 +195,6 @@ class SlottedPageHeader(PageHeader):
   # The binary representation should include the slot contents.
   def pack(self):
 
-    # text_file = open("Output.txt", "w")
-    # text_file.write(str(size))
-    # text_file.close()
-
     return self.binrepr.pack(
               self.flags, self.tupleSize,
               self.freeSpaceOffset, self.pageCapacity, self.bitmap.bytes)
@@ -202,7 +203,35 @@ class SlottedPageHeader(PageHeader):
   # Create a slotted page header instance from a binary representation held in the given buffer.
   @classmethod
   def unpack(cls, buffer):
-    raise NotImplementedError
+    bString = '0b' + ('0' * len(buffer))
+    bitmap2 = BitArray(bString)
+
+    bufferLength = (len(buffer)//8) + 1
+    binrepr2   = struct.Struct("cHHH" + str(bufferLength) + 's')
+
+
+
+    values = binrepr2.unpack_from(buffer)
+    text_file = open("last.txt", "w")
+
+    bitString = ''
+
+    for bit in values[4]:
+      if bit == 0:
+        bitString += '0'
+      else:
+        bitString += '1'
+
+    text_file.write(bitString)
+    text_file.close()
+
+
+
+    if len(values) == 5:
+      return cls(buffer=buffer, flags=values[0], tupleSize=values[1],
+                 freeSpaceOffset=values[2], pageCapacity=values[3], 
+                 bitmap=BitArray(bitString))
+    # raise NotImplementedError
 
 
 
