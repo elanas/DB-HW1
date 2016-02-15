@@ -89,24 +89,26 @@ class SlottedPageHeader(PageHeader):
   def __init__(self, **kwargs):
 
     buffer=kwargs.get("buffer", None)
+    bitmap=kwargs.get("bitmap", None)
 
-    bString = '0' * len(buffer)
-    self.bitmap = BitArray(bString)
-
-    bufferLength = (len(buffer)//8) + 1
-
-    self.binrepr   = struct.Struct("cHHH" + str(bufferLength) + 's')
-    self.size      = self.binrepr.size
-
-    super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), 
-      tupleSize=kwargs.get("tupleSize", None))
     # buffer     = kwargs.get("buffer", None)
     # self.flags = kwargs.get("flags", b'\x00')
-    if buffer:
-      raise NotImplementedError
-    else:
-      raise ValueError("No backing buffer supplied for SlottedPageHeader")
+    if buffer and bitmap == None:
+      bString = '0' * len(buffer)
+      self.bitmap = BitArray(bString)
 
+      bufferLength = (len(buffer)//8) + 1
+
+      self.binrepr   = struct.Struct("cHHH" + str(bufferLength) + 's')
+      self.size      = self.binrepr.size
+
+      # raise NotImplementedError
+    elif buffer == None:
+      raise ValueError("No backing buffer supplied for SlottedPageHeader")
+    
+    super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), 
+    tupleSize=kwargs.get("tupleSize", None))
+  
   def __eq__(self, other):
     raise NotImplementedError
 
@@ -134,7 +136,9 @@ class SlottedPageHeader(PageHeader):
     self.setFlag(PageHeader.dirtyMask, dirty)
 
   def numTuples(self):
-    raise NotImplementedError
+    return self.bitmap.count(1)
+
+    # raise NotImplementedError
 
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
@@ -142,7 +146,8 @@ class SlottedPageHeader(PageHeader):
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
-    raise NotImplementedError
+    return self.numTuples() * self.tupleSize
+    # raise NotImplementedError
 
 
   # Slot operations.
@@ -328,7 +333,7 @@ class SlottedPage(BytesIO):
       else:
         raise ValueError("No page identifier provided to page constructor.")
       
-      raise NotImplementedError
+      # raise NotImplementedError
 
     else:
       raise ValueError("No backing buffer provided to page constructor.")
@@ -361,7 +366,7 @@ class SlottedPage(BytesIO):
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
-    raise NotImplementedError
+    # raise NotImplementedError
 
   # Zeroes out the contents of the tuple at the given tuple id.
   def clearTuple(self, tupleId):
