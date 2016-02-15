@@ -120,7 +120,7 @@ class SlottedPageHeader(PageHeader):
     raise NotImplementedError
 
   def headerSize(self):
-    return self.reprSize
+    return self.size
 
   # Flag operations.
   def flag(self, mask):
@@ -146,7 +146,13 @@ class SlottedPageHeader(PageHeader):
 
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
-    raise NotImplementedError
+    space = self.bitmap[0:self.pageCapacity].count(0)
+
+    text_file = open("last.txt", "a")
+    text_file.write(str(space) + ", ")
+    text_file.close()
+    return space * self.tupleSize
+    # raise NotImplementedError
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
@@ -180,13 +186,25 @@ class SlottedPageHeader(PageHeader):
   
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
-    raise NotImplementedError
+    # raise NotImplementedError
+    findTuple = self.bitmap.find('0b0', 0, self.pageCapacity)
+    if findTuple == ():
+      return False
+    else:
+      return True
 
   # Returns the tupleIndex of the next free tuple.
   # This should also "allocate" the tuple, such that any subsequent call
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
-    raise NotImplementedError
+    nextTuple = self.bitmap.find('0b0', 0, self.pageCapacity)
+
+    if nextTuple == ():
+      return None
+
+    self.bitmap[nextTuple[0]] = '0b1'
+    return nextTuple[0]
+    # raise NotImplementedError
 
   def nextTupleRange(self):
     raise NotImplementedError
@@ -224,8 +242,6 @@ class SlottedPageHeader(PageHeader):
 
     text_file.write(bitString)
     text_file.close()
-
-
 
     if len(values) == 5:
       return cls(buffer=buffer, flags=values[0], tupleSize=values[1],
@@ -430,7 +446,10 @@ class SlottedPage(Page):
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
-    bitTuple = self.header.bitmap.find('0b0')
+    bitTuple = self.header.bitmap.find('0b0', 0, self.header.pageCapacity)
+
+    if bitTuple == ():
+      return None
 
     tupleID = TupleId(self.pageId, bitTuple[0])
 
