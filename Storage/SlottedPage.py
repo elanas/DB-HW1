@@ -416,11 +416,13 @@ class SlottedPage(Page):
 
   # Zeroes out the contents of the tuple at the given tuple id.
   def clearTuple(self, tupleId):
-    raise NotImplementedError
+    super().clearTuple(tupleId)
+    # raise NotImplementedError
 
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
-    raise NotImplementedError
+    self.header.bitmap[tupleId.tupleIndex * self.header.tupleSize] = '0b0'
+    # raise NotImplementedError
 
   # Returns a binary representation of this page.
   # This should refresh the binary representation of the page header contained
