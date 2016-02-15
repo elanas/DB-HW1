@@ -94,7 +94,7 @@ class SlottedPageHeader(PageHeader):
     # buffer     = kwargs.get("buffer", None)
     # self.flags = kwargs.get("flags", b'\x00')
     if buffer and bitmap == None:
-      bString = '0' * len(buffer)
+      bString = '0b' + ('0' * len(buffer))
       self.bitmap = BitArray(bString)
 
       bufferLength = (len(buffer)//8) + 1
@@ -366,6 +366,16 @@ class SlottedPage(BytesIO):
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
+    bitTuple = self.header.bitmap.find('0b0')
+
+    tupleID = TupleId(self.pageId, bitTuple[0])
+
+    view = self.getbuffer()
+    view[bitTuple[0] * self.header.tupleSize:bitTuple[0] * self.header.tupleSize + self.header.tupleSize] = tupleData
+    self.header.bitmap[bitTuple[0]:bitTuple[0] + 1] = 1
+    return tupleID
+
+
     # raise NotImplementedError
 
   # Zeroes out the contents of the tuple at the given tuple id.
