@@ -83,8 +83,7 @@ class SlottedPageHeader(PageHeader):
   True
   """
 
-  binrepr   = struct.Struct("cHHH")
-  size      = binrepr.size
+
 
   def __init__(self, **kwargs):
 
@@ -211,7 +210,7 @@ class SlottedPageHeader(PageHeader):
 # DESIGN QUESTION 2: should this inherit from Page?
 # If so, what methods can we reuse from the parent?
 #
-class SlottedPage(BytesIO):
+class SlottedPage(Page):
   """
   A slotted page implementation.
 
@@ -358,7 +357,21 @@ class SlottedPage(BytesIO):
 
   # Returns a byte string representing a packed tuple for the given tuple id.
   def getTuple(self, tupleId):
-    raise NotImplementedError
+
+    tupleIndex = tupleId.tupleIndex
+
+    view = self.getbuffer()
+    offset = tupleIndex * self.header.tupleSize + self.header.size
+    tupleBytes = view[offset: offset + self.header.tupleSize]
+
+    if self.header.bitmap[tupleIndex] == 0:
+      return None
+
+    return tupleBytes
+
+    # return Page.getTuple(self, tupleId)
+
+    # raise NotImplementedError
 
   # Updates the (packed) tuple at the given tuple id.
   def putTuple(self, tupleId, tupleData):
@@ -370,9 +383,18 @@ class SlottedPage(BytesIO):
 
     tupleID = TupleId(self.pageId, bitTuple[0])
 
+    text_file = open("tuple.txt", "a")
+    text_file.write((str(bitTuple) + ", "))
+    text_file.close()
+
     view = self.getbuffer()
-    view[bitTuple[0] * self.header.tupleSize:bitTuple[0] * self.header.tupleSize + self.header.tupleSize] = tupleData
+    view[self.header.size + bitTuple[0] * self.header.tupleSize : self.header.size + bitTuple[0] * self.header.tupleSize + self.header.tupleSize] = tupleData
     self.header.bitmap[bitTuple[0]:bitTuple[0] + 1] = 1
+
+    # text_file = open("second.txt", "a")
+    # text_file.write((str(self.header.bitmap[:])) + '\n')
+    # text_file.close()
+
     return tupleID
 
 

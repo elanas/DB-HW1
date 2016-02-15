@@ -427,6 +427,9 @@ class Page(BytesIO):
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
 
+    if not self.header.hasFreeTuple:
+      return None 
+
     tupleID = TupleId(self.pageId, self.header.numTuples())
 
     view = self.getbuffer()
