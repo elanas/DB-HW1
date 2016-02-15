@@ -6,11 +6,13 @@ from Catalog.Identifiers import PageId, FileId, TupleId
 from Catalog.Schema import DBSchema
 from Storage.Page import PageHeader, Page
 
+from bitstring import BitArray
+
 ###########################################################
 # DESIGN QUESTION 1: should this inherit from PageHeader?
 # If so, what methods can we reuse from the parent?
 #
-class SlottedPageHeader:
+class SlottedPageHeader(PageHeader):
   """
   A slotted page header implementation. This should store a slot bitmap
   implemented as a memoryview on the byte buffer backing the page
@@ -81,9 +83,25 @@ class SlottedPageHeader:
   True
   """
 
+  binrepr   = struct.Struct("cHHH")
+  size      = binrepr.size
+
   def __init__(self, **kwargs):
-    buffer     = kwargs.get("buffer", None)
-    self.flags = kwargs.get("flags", b'\x00')
+
+    buffer=kwargs.get("buffer", None)
+
+    bString = '0' * len(buffer)
+    self.bitmap = BitArray(bString)
+
+    bufferLength = (len(buffer)//8) + 1
+
+    self.binrepr   = struct.Struct("cHHH" + str(bufferLength) + 's')
+    self.size      = self.binrepr.size
+
+    super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), 
+      tupleSize=kwargs.get("tupleSize", None))
+    # buffer     = kwargs.get("buffer", None)
+    # self.flags = kwargs.get("flags", b'\x00')
     if buffer:
       raise NotImplementedError
     else:
@@ -167,7 +185,15 @@ class SlottedPageHeader:
   # Create a binary representation of a slotted page header.
   # The binary representation should include the slot contents.
   def pack(self):
-    raise NotImplementedError
+
+    # text_file = open("Output.txt", "w")
+    # text_file.write(str(size))
+    # text_file.close()
+
+    return self.binrepr.pack(
+              self.flags, self.tupleSize,
+              self.freeSpaceOffset, self.pageCapacity, self.bitmap.bytes)
+    # raise NotImplementedError
 
   # Create a slotted page header instance from a binary representation held in the given buffer.
   @classmethod
@@ -180,7 +206,7 @@ class SlottedPageHeader:
 # DESIGN QUESTION 2: should this inherit from Page?
 # If so, what methods can we reuse from the parent?
 #
-class SlottedPage:
+class SlottedPage(BytesIO):
   """
   A slotted page implementation.
 

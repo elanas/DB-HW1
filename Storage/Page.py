@@ -133,10 +133,6 @@ class PageHeader:
 
     buffer[0:self.size] = self.pack()
 
-    text_file = open("initial.txt", "w")
-    text_file.write(str(self.flags) + ", " + str(self.tupleSize) + ", " + str(self.pageCapacity) + ", " + str(self.freeSpaceOffset) + ", " )
-    text_file.close()
-
   # Page header equality operation based on header fields.
   def __eq__(self, other):
     return (    self.flags == other.flags
@@ -222,9 +218,6 @@ class PageHeader:
   def unpack(cls, buffer):
     values = PageHeader.binrepr.unpack_from(buffer)
     if len(values) == 4:
-      text_file = open("end.txt", "w")
-      text_file.write(str(values[0]) + ", " + str(values[1]) + ", " + str(values[2]) + ", " + str(values[3]) + ", " )
-      text_file.close()
       return cls(buffer=buffer, flags=values[0], tupleSize=values[1],
                  freeSpaceOffset=values[2], pageCapacity=values[3])
 
