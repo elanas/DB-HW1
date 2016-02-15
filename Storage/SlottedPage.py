@@ -375,7 +375,8 @@ class SlottedPage(Page):
 
   # Updates the (packed) tuple at the given tuple id.
   def putTuple(self, tupleId, tupleData):
-    raise NotImplementedError
+    super().putTuple(tupleId, tupleData)
+    # raise NotImplementedError
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
