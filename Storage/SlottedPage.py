@@ -348,15 +348,36 @@ class SlottedPage(Page):
 
   # Tuple iterator.
   def __iter__(self):
-    raise NotImplementedError
+    iterTuple = self.header.bitmap.find('0b1')
+    if iterTuple == ():
+      self.iterTupleIdx = 0
+    else:
+      self.iterTupleIdx = iterTuple[0]
+    return self
+    # raise NotImplementedError
 
   def __next__(self):
-    raise NotImplementedError
+
+    t = self.getTuple(TupleId(self.pageId, self.iterTupleIdx))
+    
+    if t:
+      nextTuple = self.header.bitmap.find('0b1', self.iterTupleIdx + 1)
+      if nextTuple == ():
+        self.iterTupleIdx = -1        
+      else:
+        self.iterTupleIdx = nextTuple[0]
+      return t
+    else:
+      raise StopIteration
+    # raise NotImplementedError
 
   # Tuple accessor methods
 
   # Returns a byte string representing a packed tuple for the given tuple id.
   def getTuple(self, tupleId):
+
+    if tupleId.tupleIndex < 0:
+      return None
 
     tupleIndex = tupleId.tupleIndex
 
@@ -364,7 +385,7 @@ class SlottedPage(Page):
     offset = tupleIndex * self.header.tupleSize + self.header.size
     tupleBytes = view[offset: offset + self.header.tupleSize]
 
-    if self.header.bitmap[tupleIndex] == 0:
+    if not self.header.bitmap[tupleIndex]:
       return None
 
     return tupleBytes
@@ -384,17 +405,9 @@ class SlottedPage(Page):
 
     tupleID = TupleId(self.pageId, bitTuple[0])
 
-    text_file = open("tuple.txt", "a")
-    text_file.write((str(bitTuple) + ", "))
-    text_file.close()
-
     view = self.getbuffer()
     view[self.header.size + bitTuple[0] * self.header.tupleSize : self.header.size + bitTuple[0] * self.header.tupleSize + self.header.tupleSize] = tupleData
     self.header.bitmap[bitTuple[0]:bitTuple[0] + 1] = 1
-
-    # text_file = open("second.txt", "a")
-    # text_file.write((str(self.header.bitmap[:])) + '\n')
-    # text_file.close()
 
     return tupleID
 

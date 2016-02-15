@@ -404,6 +404,11 @@ class Page(BytesIO):
 
   # Returns a byte string representing a packed tuple for the given tuple id.
   def getTuple(self, tupleId):
+    
+    if tupleId.tupleIndex < 0:
+      return None
+
+
     tupleIndex = tupleId.tupleIndex
 
     view = self.getbuffer()
