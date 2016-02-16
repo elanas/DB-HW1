@@ -87,26 +87,28 @@ class SlottedPageHeader(PageHeader):
 
 
   def __init__(self, **kwargs):
-
     buffer=kwargs.get("buffer", None)
+    self.flags           = kwargs.get("flags", b'\x00')
+    self.pageCapacity = kwargs.get("pageCapacity", len(buffer))
+    self.tupleSize = kwargs.get("tupleSize", None)
     self.bitmap=kwargs.get("bitmap", None)
 
-    # buffer     = kwargs.get("buffer", None)
-    # self.flags = kwargs.get("flags", b'\x00')
-    if buffer and self.bitmap == None:
-      bString = '0b' + ('0' * len(buffer))
-      self.bitmap = BitArray(bString)
-
-      # raise NotImplementedError
-    elif buffer == None:
+    if buffer == None:
       raise ValueError("No backing buffer supplied for SlottedPageHeader")
-    
-    bufferLength = (len(buffer)//8) + 1
-    self.binrepr   = struct.Struct("cHHH" + str(bufferLength) + 's')
-    self.size      = self.binrepr.size
 
-    super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), 
-      tupleSize=kwargs.get("tupleSize", None))
+    if self.bitmap == None:
+      headerSizeWithoutBitmap = struct.Struct("chhh").size
+      tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tuplesize)))
+      bString = '0b' + ('0' * tupleCapacity)
+      self.bitmap = BitArray(bString)
+   
+    self.binrepr   = struct.Struct("cHHH" + str(math.ceil(tupleCapacity/8)) + 's')
+    self.size      = self.binrepr.size
+    self.freeSpaceOffset = self.size
+   
+    buffer[0:self.size] = self.pack()
+
+ #   super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), self.tupleSize)
   
   def __eq__(self, other):
     # raise NotImplementedError
