@@ -416,7 +416,7 @@ class Page(BytesIO):
       return None 
 
     tupleOffset = self.header.nextFreeTuple()
-    tupleIndex = (tupleOffset-self.header.size)/self.header.tupleSize
+    tupleIndex = (tupleOffset-self.header.size)//self.header.tupleSize
     tupleID = TupleId(self.pageId, tupleIndex)
 
     view = self.getbuffer()
