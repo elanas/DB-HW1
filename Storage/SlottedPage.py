@@ -98,7 +98,7 @@ class SlottedPageHeader(PageHeader):
 
     if self.bitmap == None:
       headerSizeWithoutBitmap = struct.Struct("chhh").size
-      tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tuplesize)))
+      tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tupleSize)))
       bString = '0b' + ('0' * tupleCapacity)
       self.bitmap = BitArray(bString)
    
@@ -144,17 +144,14 @@ class SlottedPageHeader(PageHeader):
   def numTuples(self):
     return self.bitmap.count(1)
 
-    # raise NotImplementedError
-
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
-    space = self.bitmap[0:self.pageCapacity].count(0)
+    space = self.bitmap.count(0)
 
     text_file = open("last.txt", "a")
     text_file.write(str(space) + ", ")
     text_file.close()
     return space * self.tupleSize
-    # raise NotImplementedError
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
