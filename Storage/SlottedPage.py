@@ -102,7 +102,7 @@ class SlottedPageHeader(PageHeader):
       bString = '0b' + ('0' * tupleCapacity)
       self.bitmap = BitArray(bString)
    
-    self.binrepr   = struct.Struct("cHHH" + str(math.ceil(tupleCapacity/8)) + 's')
+    self.binrepr   = struct.Struct("cHHH" + str(math.ceil(len(self.bitmap)/8)) + 's')
     self.size      = self.binrepr.size
     self.freeSpaceOffset = self.size
    
@@ -186,7 +186,7 @@ class SlottedPageHeader(PageHeader):
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
     # raise NotImplementedError
-    findTuple = self.bitmap.find('0b0', 0, self.pageCapacity)
+    findTuple = self.bitmap.find('0b0')
     if findTuple == ():
       return False
     else:
@@ -196,7 +196,7 @@ class SlottedPageHeader(PageHeader):
   # This should also "allocate" the tuple, such that any subsequent call
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
-    nextTuple = self.bitmap.find('0b0', 0, self.pageCapacity)
+    nextTuple = self.bitmap.find('0b0')
 
     if nextTuple == ():
       return None
@@ -222,20 +222,30 @@ class SlottedPageHeader(PageHeader):
   @classmethod
   def unpack(cls, buffer):
 
+    binrepr1 = struct.Struct("cHHH")
+    values1 = binrepr1.unpack_from(buffer)
+
     headerSizeWithoutBitmap = struct.Struct("chhh").size
-    tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tupleSize)))
+    tupleCapacity = math.floor((8*(values1[3]-headerSizeWithoutBitmap))/(1+(8*values1[1])))
     bString = '0b' + ('0' * tupleCapacity)
     bitmap = BitArray(bString)
    
-    binrepr   = struct.Struct("cHHH" + str(math.ceil(tupleCapacity/8)) + 's')
-    values = binrepr.unpack_from(buffer)
+    binrepr2   = struct.Struct("cHHH" + str(math.ceil(tupleCapacity/8)) + 's')
+    values2 = binrepr2.unpack_from(buffer)
 
-    for i in range(0,tupleCapacity):
-      bitmap[i] = values[4][i]
+    index = 0
+    for bit in values2[4]:
+      if index >= tupleCapacity:
+        break
+      bitmap[index] = bit
+      index = index + 1
 
-    if len(values) == 5:
-      return cls(buffer=buffer, flags=values[0], tupleSize=values[1],
-                 freeSpaceOffset=values[2], pageCapacity=values[3], 
+    # for i in range(0,tupleCapacity):
+    #   bitmap[i] = values2[4][i]
+
+    if len(values2) == 5:
+      return cls(buffer=buffer, flags=values2[0], tupleSize=values2[1],
+                 freeSpaceOffset=values2[2], pageCapacity=values2[3], 
                  bitmap=bitmap)
     # raise NotImplementedError
 
@@ -436,7 +446,7 @@ class SlottedPage(Page):
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
-    bitTuple = self.header.bitmap.find('0b0', 0, self.header.pageCapacity)
+    bitTuple = self.header.bitmap.find('0b0')
 
     if bitTuple == ():
       return None
