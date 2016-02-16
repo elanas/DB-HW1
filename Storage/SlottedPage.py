@@ -98,7 +98,7 @@ class SlottedPageHeader(PageHeader):
 
     if self.bitmap == None:
       headerSizeWithoutBitmap = struct.Struct("chhh").size
-      tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tuplesize)))
+      tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tupleSize)))
       bString = '0b' + ('0' * tupleCapacity)
       self.bitmap = BitArray(bString)
    
