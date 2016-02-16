@@ -129,7 +129,6 @@ class PageHeader:
     self.tupleSize       = kwargs.get("tupleSize", None)
     self.pageCapacity    = kwargs.get("pageCapacity", len(buffer))
     self.freeSpaceOffset = self.size
-    # raise NotImplementedError
 
     buffer[0:self.size] = self.pack()
 
@@ -145,7 +144,6 @@ class PageHeader:
 
   def headerSize(self):
     return self.size
-    # raise NotImplementedError
 
   # Flag operations.
   def flag(self, mask):
@@ -171,41 +169,33 @@ class PageHeader:
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
     return self.pageCapacity - (self.tupleSize * self.numTuples() + self.size)
-    # raise NotImplementedError
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
     return self.freeSpaceOffset - self.size
-    
-    # raise NotImplementedError
 
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
     return self.freeSpace() >= self.tupleSize
-    # raise NotImplementedError
 
   # Returns the page offset of the next free tuple.
   # This should also "allocate" the tuple, such that any subsequent call
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
-    offset = self.freeSpaceOffset
-
-    if offset + self.tupleSize >= self.pageCapacity:
+    if self.freeSpaceOffset + self.tupleSize >= self.pageCapacity:
       return None
 
+    offset = self.freeSpaceOffset
     self.freeSpaceOffset += self.tupleSize
-
-
     return offset
-    # raise NotImplementedError
 
   # Returns a triple of (tupleIndex, start, end) for the next free tuple.
-  # This should cal nextFreeTuple()
+  # This should call nextFreeTuple()
   def nextTupleRange(self):
+    index = self.numTuples()
     start = self.nextFreeTuple()
     end = start + self.tupleSize
-    return (self.numTuples(), start, end)
-    # raise NotImplementedError
+    return (index, start, end)
 
   # Returns a binary representation of this page header.
   def pack(self):
@@ -364,9 +354,6 @@ class Page(BytesIO):
         self.header = self.initializeHeader(**kwargs)
       else:
         raise ValueError("No page identifier provided to page constructor.")
-
-      # raise NotImplementedError
-
     else:
       raise ValueError("No backing buffer provided to page constructor.")
 
@@ -404,21 +391,17 @@ class Page(BytesIO):
 
   # Returns a byte string representing a packed tuple for the given tuple id.
   def getTuple(self, tupleId):
-    
     if tupleId.tupleIndex < 0:
       return None
 
-
     tupleIndex = tupleId.tupleIndex
-
+    if tupleIndex >= self.header.numTuples():
+      return None
+ 
     view = self.getbuffer()
     offset = tupleIndex * self.header.tupleSize + self.header.size
     tupleBytes = view[offset: offset + self.header.tupleSize]
-
-    if tupleIndex >= self.header.numTuples():
-      return None
     return tupleBytes
-    # raise NotImplementedError
 
   # Updates the (packed) tuple at the given tuple id.
   def putTuple(self, tupleId, tupleData):
@@ -427,23 +410,19 @@ class Page(BytesIO):
     view = self.getbuffer()
     view[offset:offset + self.header.tupleSize] = tupleData
 
-    # raise NotImplementedError
-
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
-
     if not self.header.hasFreeTuple:
       return None 
 
-    tupleID = TupleId(self.pageId, self.header.numTuples())
+    tupleOffset = self.header.nextFreeTuple()
+    tupleIndex = (tupleOffset-self.header.size)/self.header.tupleSize
+    tupleID = TupleId(self.pageId, tupleIndex)
 
     view = self.getbuffer()
-    view[self.header.freeSpaceOffset:self.header.freeSpaceOffset + self.header.tupleSize] = tupleData
-    self.header.freeSpaceOffset += self.header.tupleSize
+    view[tupleOffset:tupleOffset + self.header.tupleSize] = tupleData
 
     return tupleID
-
-    # raise NotImplementedError
 
   # Zeroes out the contents of the tuple at the given tuple id.
   def clearTuple(self, tupleId):
@@ -453,7 +432,6 @@ class Page(BytesIO):
 
     for i in range(self.header.tupleSize):
       view[i + tupleOffset : i + tupleOffset + 1] = b'\x00'
-    # raise NotImplementedError
 
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
@@ -466,13 +444,10 @@ class Page(BytesIO):
     for i in range(tupleOff,tupleOff + (tuplesToShift * self.header.tupleSize)):
       view[i:i+1] = view[i+self.header.tupleSize:i+self.header.tupleSize + 1]
 
-    # for i in range(self.header.tupleSize * tuplesToShift, self.header.tupleSize * tuplesToShift + self.header.tupleSize):
-    #   view[i] = b'\x00'
     toClearID = TupleId(self.pageId, self.header.numTuples()-1)
     self.clearTuple(toClearID)
 
     self.header.freeSpaceOffset -= self.header.tupleSize
-    # raise NotImplementedError
 
   # Returns a binary representation of this page.
   # This should refresh the binary representation of the page header contained
