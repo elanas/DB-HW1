@@ -211,6 +211,7 @@ class SlottedPageHeader(PageHeader):
   # Create a binary representation of a slotted page header.
   # The binary representation should include the slot contents.
   def pack(self):
+    self.bitmap.append('0b' + ('0'*(8 - len(self.bitmap)%8)))
 
     return self.binrepr.pack(
               self.flags, self.tupleSize,
@@ -220,32 +221,22 @@ class SlottedPageHeader(PageHeader):
   # Create a slotted page header instance from a binary representation held in the given buffer.
   @classmethod
   def unpack(cls, buffer):
-    bString = '0b' + ('0' * len(buffer))
-    bitmap2 = BitArray(bString)
 
-    bufferLength = (len(buffer)//8) + 1
-    binrepr2   = struct.Struct("cHHH" + str(bufferLength) + 's')
+    headerSizeWithoutBitmap = struct.Struct("chhh").size
+    tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tupleSize)))
+    bString = '0b' + ('0' * tupleCapacity)
+    bitmap = BitArray(bString)
+   
+    binrepr   = struct.Struct("cHHH" + str(math.ceil(tupleCapacity/8)) + 's')
+    values = binrepr.unpack_from(buffer)
 
-
-
-    values = binrepr2.unpack_from(buffer)
-    text_file = open("last.txt", "w")
-
-    bitString = ''
-
-    for bit in values[4]:
-      if bit == 0:
-        bitString += '0'
-      else:
-        bitString += '1'
-
-    text_file.write(bitString)
-    text_file.close()
+    for i in range(0,tupleCapacity):
+      bitmap[i] = values[4][i]
 
     if len(values) == 5:
       return cls(buffer=buffer, flags=values[0], tupleSize=values[1],
                  freeSpaceOffset=values[2], pageCapacity=values[3], 
-                 bitmap=BitArray(bitString))
+                 bitmap=bitmap)
     # raise NotImplementedError
 
 
