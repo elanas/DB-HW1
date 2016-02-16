@@ -146,12 +146,7 @@ class SlottedPageHeader(PageHeader):
 
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
-    space = self.bitmap.count(0)
-
-    text_file = open("last.txt", "a")
-    text_file.write(str(space) + ", ")
-    text_file.close()
-    return space * self.tupleSize
+    return self.pageCapacity - (self.size + (self.numTuples() * self.tupleSize))
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
@@ -186,6 +181,7 @@ class SlottedPageHeader(PageHeader):
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
     # raise NotImplementedError
+
     findTuple = self.bitmap.find('0b0')
     if findTuple == ():
       return False
@@ -211,11 +207,12 @@ class SlottedPageHeader(PageHeader):
   # Create a binary representation of a slotted page header.
   # The binary representation should include the slot contents.
   def pack(self):
-    self.bitmap.append('0b' + ('0'*(8 - len(self.bitmap)%8)))
+    bitmap2 = self.bitmap
+    # bitmap2.append('0b' + ('0'*(8 - len(self.bitmap)%8)))
 
     return self.binrepr.pack(
               self.flags, self.tupleSize,
-              self.freeSpaceOffset, self.pageCapacity, self.bitmap.bytes)
+              self.freeSpaceOffset, self.pageCapacity, self.bitmap.tobytes())
     # raise NotImplementedError
 
   # Create a slotted page header instance from a binary representation held in the given buffer.
@@ -239,9 +236,6 @@ class SlottedPageHeader(PageHeader):
         break
       bitmap[index] = bit
       index = index + 1
-
-    # for i in range(0,tupleCapacity):
-    #   bitmap[i] = values2[4][i]
 
     if len(values2) == 5:
       return cls(buffer=buffer, flags=values2[0], tupleSize=values2[1],
@@ -395,7 +389,7 @@ class SlottedPage(Page):
   def __iter__(self):
     iterTuple = self.header.bitmap.find('0b1')
     if iterTuple == ():
-      self.iterTupleIdx = 0
+      self.iterTupleIdx = -1
     else:
       self.iterTupleIdx = iterTuple[0]
     return self
@@ -421,17 +415,17 @@ class SlottedPage(Page):
   # Returns a byte string representing a packed tuple for the given tuple id.
   def getTuple(self, tupleId):
 
-    if tupleId.tupleIndex < 0:
+    tupleIndex = tupleId.tupleIndex
+
+    if tupleIndex < 0:
       return None
 
-    tupleIndex = tupleId.tupleIndex
+    if not self.header.bitmap[tupleIndex]:
+      return None
 
     view = self.getbuffer()
     offset = tupleIndex * self.header.tupleSize + self.header.size
     tupleBytes = view[offset: offset + self.header.tupleSize]
-
-    if not self.header.bitmap[tupleIndex]:
-      return None
 
     return tupleBytes
 
