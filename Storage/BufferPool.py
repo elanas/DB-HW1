@@ -42,7 +42,11 @@ class BufferPool:
 
     ####################################################################################
     # DESIGN QUESTION: what other data structures do we need to keep in the buffer pool?
-    self.freeList     = None
+    self.freeList     = []
+    for i in range(self.poolSize // self.pageSize):
+      self.freeList.append(i * self.pageSize)
+
+    self.pageDict = OrderedDict()
 
 
   def setFileManager(self, fileMgr):
@@ -69,7 +73,8 @@ class BufferPool:
   # Buffer pool operations
 
   def hasPage(self, pageId):
-    raise NotImplementedError
+    return pageId in self.pageDict
+    # raise NotImplementedError
   
   def getPage(self, pageId):
     raise NotImplementedError

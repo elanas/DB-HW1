@@ -336,11 +336,11 @@ class StorageFile:
     fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
 
     buffer = data[fileIndex:fileIndex + self.header.pageSize]
-    pageHeader = self.header.pageClass.unpack(buffer)
+    pageHeader = self.header.pageClass.headerClass.unpack(buffer=buffer)
     return pageHeader
 
     # implemented but not tested
-    raise NotImplementedError
+    # raise NotImplementedError
 
   # Writes a page header to disk.
   # The page must already exist, that is we cannot extend the file with only a page header.
@@ -386,25 +386,32 @@ class StorageFile:
     # raise NotImplementedError
 
   def writePage(self, page):
-    pId = page.pageId.pageIndex
+    # tf = open("numtuples.txt", "w")
+    # tf.write(str(page.header.numTuples()))
+    # tf.close()
+
+    fileIndex = (page.pageId.pageIndex * self.header.pageSize) + self.header.size 
+
 
     heapfile = open(self.filePath, "rb")
     data = bytearray(heapfile.read())
     heapfile.close()
 
-    data[(pId * self.header.pageSize) + self.header.size :
-        (pId * self.header.pageSize) + self.header.size + self.header.pageSize] = page.pack()
+    data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
+
+    
 
     heapfile = open(self.filePath, "wb")
     heapfile.write(data)
     heapfile.close()
+
+
     # raise NotImplementedError
 
   # Adds a new page to the file by writing past its end.
   def allocatePage(self):
     pId = PageId(self.fileId, self.numPages())
 
-    # TODO change to page cls
     page = self.header.pageClass(pageId=pId, buffer=bytes(self.header.pageSize), schema=self.header.schema)
 
     heapfile = open(self.filePath, "ab+")

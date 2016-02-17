@@ -147,7 +147,7 @@ class SlottedPageHeader(PageHeader):
 
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
-    return self.numTuples() * self.tupleSize
+    return (self.numTuples() * self.tupleSize)
 
 
   # Slot operations.

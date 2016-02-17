@@ -164,7 +164,7 @@ class PageHeader:
 
   # Tuple count for the header.
   def numTuples(self):
-    return int(self.usedSpace() / self.tupleSize)
+    return (self.usedSpace() // self.tupleSize)
 
   # Returns the space available in the page associated with this header.
   def freeSpace(self):
