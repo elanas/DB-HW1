@@ -109,7 +109,6 @@ class SlottedPageHeader(PageHeader):
  #   super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), self.tupleSize)
   
   def __eq__(self, other):
-    # raise NotImplementedError
     return (    self.flags == other.flags
             and self.tupleSize == other.tupleSize
             and self.pageCapacity == other.pageCapacity
@@ -153,25 +152,39 @@ class SlottedPageHeader(PageHeader):
 
   # Slot operations.
   def offsetOfSlot(self, slot):
-    raise NotImplementedError
+    return slot * self.tupleSize + self.size
 
   def hasSlot(self, slotIndex):
-    raise NotImplementedError
+    return slotIndex < len(self.bitmap)
 
   def getSlot(self, slotIndex):
-    raise NotImplementedError
+    return self.bitmap[slotIndex] == '0b1' 
 
   def setSlot(self, slotIndex, slot):
-    raise NotImplementedError
+    if not self.hasSlot(slotIndex):
+      return
+
+    if slot == True:
+      self.bitmap[slotIndex] = '0b1'
+    elif slot == False:
+      self.bitmap[slotIndex] = '0b0'
 
   def resetSlot(self, slotIndex):
-    raise NotImplementedError
+    self.setSlot(slotIndex, False)
 
   def freeSlots(self):
-    raise NotImplementedError
+    freeList = []
+    for i in range(len(self.bitmap)):
+      if self.bitmap[i] == '0b0':
+        freeList.append(i)
+    return freeList
 
   def usedSlots(self):
-    raise NotImplementedError
+    usedList = []
+    for i in range(len(self.bitmap)):
+      if self.bitmap[i] == '0b1':
+        usedList.append(i)
+    return usedList
 
   # Tuple allocation operations.
   
@@ -236,7 +249,6 @@ class SlottedPageHeader(PageHeader):
       return cls(buffer=buffer, flags=values2[0], tupleSize=values2[1],
                  freeSpaceOffset=values2[2], pageCapacity=values2[3], 
                  bitmap=bitmap)
-    # raise NotImplementedError
 
 
 
@@ -366,8 +378,6 @@ class SlottedPage(Page):
       else:
         raise ValueError("No page identifier provided to page constructor.")
       
-      # raise NotImplementedError
-
     else:
       raise ValueError("No backing buffer provided to page constructor.")
 
@@ -388,7 +398,6 @@ class SlottedPage(Page):
     else:
       self.iterTupleIdx = iterTuple[0]
     return self
-    # raise NotImplementedError
 
   def __next__(self):
 
@@ -403,7 +412,6 @@ class SlottedPage(Page):
       return t
     else:
       raise StopIteration
-    # raise NotImplementedError
 
   # Tuple accessor methods
 
@@ -415,7 +423,7 @@ class SlottedPage(Page):
     if tupleIndex < 0:
       return None
 
-    if not self.header.bitmap[tupleIndex]:
+    if self.header.bitmap[tupleIndex] == '0b0':
       return None
 
     view = self.getbuffer()
@@ -424,14 +432,9 @@ class SlottedPage(Page):
 
     return tupleBytes
 
-    # return Page.getTuple(self, tupleId)
-
-    # raise NotImplementedError
-
   # Updates the (packed) tuple at the given tuple id.
   def putTuple(self, tupleId, tupleData):
     super().putTuple(tupleId, tupleData)
-    # raise NotImplementedError
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
@@ -444,30 +447,23 @@ class SlottedPage(Page):
 
     view = self.getbuffer()
     view[self.header.size + bitTuple[0] * self.header.tupleSize : self.header.size + bitTuple[0] * self.header.tupleSize + self.header.tupleSize] = tupleData
-    self.header.bitmap[bitTuple[0]:bitTuple[0] + 1] = 1
+    self.header.bitmap[bitTuple[0]] = '0b1'
 
     return tupleID
-
-
-    # raise NotImplementedError
 
   # Zeroes out the contents of the tuple at the given tuple id.
   def clearTuple(self, tupleId):
     super().clearTuple(tupleId)
-    # raise NotImplementedError
 
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
     self.header.bitmap[tupleId.tupleIndex * self.header.tupleSize] = '0b0'
-    # raise NotImplementedError
 
   # Returns a binary representation of this page.
   # This should refresh the binary representation of the page header contained
   # within the page by packing the header in place.
   def pack(self):
     return super().pack()
-
-    # raise NotImplementedError
 
   # Creates a Page instance from the binary representation held in the buffer.
   # The pageId of the newly constructed Page instance is given as an argument.
@@ -477,8 +473,6 @@ class SlottedPage(Page):
 
     pageHeader = SlottedPageHeader.unpack(buffer)
     return SlottedPage(pageId=pageId, buffer=buffer, header=pageHeader)
-    # raise NotImplementedError
-
 
 if __name__ == "__main__":
     import doctest
