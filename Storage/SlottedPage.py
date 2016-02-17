@@ -462,13 +462,15 @@ class SlottedPage(Page):
   # This should refresh the binary representation of the page header contained
   # within the page by packing the header in place.
   def pack(self):
-    raise NotImplementedError
+    super().pack()
+    # raise NotImplementedError
 
   # Creates a Page instance from the binary representation held in the buffer.
   # The pageId of the newly constructed Page instance is given as an argument.
   @classmethod
   def unpack(cls, pageId, buffer):
-    raise NotImplementedError
+    super().unpack(cls, pageId, buffer)
+    # raise NotImplementedError
 
 
 if __name__ == "__main__":
