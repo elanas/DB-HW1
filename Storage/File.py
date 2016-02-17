@@ -329,11 +329,40 @@ class StorageFile:
 
   # Reads a page header from disk.
   def readPageHeader(self, pageId):
+    heapfile = open(self.filePath, "rb")
+    data = bytearray(heapfile.read())
+    heapfile.close()
+
+    fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
+
+    buffer = data[fileIndex:fileIndex + self.header.pageSize]
+    pageHeader = self.header.pageClass.unpack(buffer)
+    return pageHeader
+
+    # implemented but not tested
     raise NotImplementedError
 
   # Writes a page header to disk.
   # The page must already exist, that is we cannot extend the file with only a page header.
   def writePageHeader(self, page):
+    
+    # have to check that page exists
+
+    heapfile = open(self.filePath, "rb")
+    data = bytearray(heapfile.read())
+    heapfile.close()
+
+    fileIndex = (page.pageId.pageIndex * self.header.pageSize) + self.header.size 
+
+    # splices from start of page to size of page header (page header bytes
+    #  will always be in front right?) 
+    data[fileIndex : fileIndex + page.header.size] = page.header.pack()
+
+    heapfile = open(self.filePath, "wb")
+    heapfile.write(data)
+    heapfile.close()
+
+    # implemented but not tested
     raise NotImplementedError
 
 
@@ -344,20 +373,10 @@ class StorageFile:
     data = bytearray(heapfile.read())
     heapfile.close()
 
-
-    # tf = open("bit.txt", "w")
-    # tf.write(str(bytearray(data)))
-    # tf.close()
-
     fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
 
     buffer = data[fileIndex:fileIndex + self.header.pageSize]
-
-    tf = open("bit.txt", "w")
-    tf.write(str(len(data)))
-    tf.close()
-    # buffer = data[(pageId.pageIndex * self.header.pageSize) + self.header.size : 
-    # (pageId.pageIndex * self.header.pageSize) + self.header.size + self.header.pageSize]
+    
     page = self.header.pageClass.unpack(pageId, buffer)
 
     # # TODO change to page cls not SlottedPage
@@ -412,6 +431,17 @@ class StorageFile:
 
   # Inserts the given tuple to the first available page.
   def insertTuple(self, tupleData):
+    page = self.availablePage()
+    page.insertTuple(tupleData)
+
+
+    # need to make sure heap readjusts, and has a custom compare
+    # have tuple inserted into heap with first element being
+    # what should be compared, in this case #num tuple free space
+    self.freePages.heapify()
+
+    # still need to write to disk the changed page or maybe not?
+
     raise NotImplementedError
 
   # Removes the tuple by its id, tracking if the page is now free
