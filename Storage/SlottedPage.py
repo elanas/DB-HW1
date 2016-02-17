@@ -85,7 +85,6 @@ class SlottedPageHeader(PageHeader):
   True
   """
 
-
   def __init__(self, **kwargs):
     buffer=kwargs.get("buffer", None)
     self.flags           = kwargs.get("flags", b'\x00')
@@ -107,7 +106,6 @@ class SlottedPageHeader(PageHeader):
     self.freeSpaceOffset = self.size
    
     buffer[0:self.size] = self.pack()
-
  #   super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), self.tupleSize)
   
   def __eq__(self, other):
@@ -119,7 +117,7 @@ class SlottedPageHeader(PageHeader):
             and self.bitmap == other.bitmap)
 
   def __hash__(self):
-    raise NotImplementedError
+    return hash((self.flags, self.tupleSize, self.pageCapacity, self.freeSpaceOffset, self.bitmap))
 
   def headerSize(self):
     return self.size
@@ -151,7 +149,6 @@ class SlottedPageHeader(PageHeader):
   # Returns the space used in the page associated with this header.
   def usedSpace(self):
     return self.numTuples() * self.tupleSize
-    # raise NotImplementedError
 
 
   # Slot operations.
@@ -180,8 +177,6 @@ class SlottedPageHeader(PageHeader):
   
   # Returns whether the page has any free space for a tuple.
   def hasFreeTuple(self):
-    # raise NotImplementedError
-
     findTuple = self.bitmap.find('0b0')
     if findTuple == ():
       return False
@@ -199,26 +194,23 @@ class SlottedPageHeader(PageHeader):
 
     self.bitmap[nextTuple[0]] = '0b1'
     return nextTuple[0]
-    # raise NotImplementedError
 
   def nextTupleRange(self):
-    raise NotImplementedError
+    start = self.nextFreeTuple()
+    end = start + self.tupleSize
+    index = (start - self.size)//self.tupleSize
+    return (index, start, end)
 
   # Create a binary representation of a slotted page header.
   # The binary representation should include the slot contents.
   def pack(self):
-    bitmap2 = self.bitmap
-    # bitmap2.append('0b' + ('0'*(8 - len(self.bitmap)%8)))
-
     return self.binrepr.pack(
               self.flags, self.tupleSize,
               self.freeSpaceOffset, self.pageCapacity, self.bitmap.tobytes())
-    # raise NotImplementedError
 
   # Create a slotted page header instance from a binary representation held in the given buffer.
   @classmethod
   def unpack(cls, buffer):
-
     binrepr1 = struct.Struct("cHHH")
     values1 = binrepr1.unpack_from(buffer)
 
