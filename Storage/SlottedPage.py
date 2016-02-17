@@ -470,7 +470,10 @@ class SlottedPage(Page):
   # The pageId of the newly constructed Page instance is given as an argument.
   @classmethod
   def unpack(cls, pageId, buffer):
-    return super().unpack(pageId, buffer)
+    # return super().unpack(pageId, buffer)
+
+    pageHeader = SlottedPageHeader.unpack(buffer)
+    return Slotted(pageId=pageId, buffer=buffer, header=pageHeader)
     # raise NotImplementedError
 
 

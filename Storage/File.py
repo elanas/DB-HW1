@@ -21,7 +21,7 @@ class FileHeader:
   iii. a JSON-serialized schema (from DBSchema.packSchema)
 
   >>> schema = DBSchema('employee', [('id', 'int'), ('dob', 'char(10)'), ('salary', 'int')])
-  >>> fh = FileHeader(pageSize=io.DEFAULT_BUFFER_SIZE, pageClass=SlottedPage, schema=schema)
+  >>> fh = FileHeader(pageSize=io.DEFAULT_BUFFER_SIZE, pageClass=Page, schema=schema)
   >>> b = fh.pack()
   >>> fh2 = FileHeader.unpack(b)
   >>> fh.pageSize == fh2.pageSize
@@ -165,8 +165,8 @@ class StorageFile:
   # Create a pair of pages.
   >>> pId  = PageId(fId, 0)
   >>> pId1 = PageId(fId, 1)
-  >>> p    = SlottedPage(pageId=pId,  buffer=bytes(f.pageSize()), schema=schema)
-  >>> p1   = SlottedPage(pageId=pId1, buffer=bytes(f.pageSize()), schema=schema)
+  >>> p    = Page(pageId=pId,  buffer=bytes(f.pageSize()), schema=schema)
+  >>> p1   = Page(pageId=pId1, buffer=bytes(f.pageSize()), schema=schema)
 
   # Populate pages
   >>> for tup in [schema.pack(schema.instantiate(i, 2*i+20)) for i in range(10)]:
@@ -226,7 +226,7 @@ class StorageFile:
   """
 
   # Change this to the Page class if you want contiguous page storage in the file.
-  defaultPageClass = SlottedPage
+  defaultPageClass = Page
 
   # StorageFile constructor.
   #
@@ -340,18 +340,31 @@ class StorageFile:
   # Page operations
 
   def readPage(self, pageId, page):
-    # heapfile = open(self.filePath, "rb")
-    # data = bytearray(heapfile.read())
-    # heapfile.close()
+    heapfile = open(self.filePath, "rb")
+    data = bytearray(heapfile.read())
+    heapfile.close()
 
+
+    # tf = open("bit.txt", "w")
+    # tf.write(str(bytearray(data)))
+    # tf.close()
+
+    fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
+
+    buffer = data[fileIndex:fileIndex + self.header.pageSize]
+
+    tf = open("bit.txt", "w")
+    tf.write(str(len(data)))
+    tf.close()
     # buffer = data[(pageId.pageIndex * self.header.pageSize) + self.header.size : 
     # (pageId.pageIndex * self.header.pageSize) + self.header.size + self.header.pageSize]
-
+    page = self.header.pageClass.unpack(pageId, buffer)
+    return page
     # # TODO change to page cls not SlottedPage
     # page = SlottedPage.unpack( buffer, pageId)
 
     # return page
-    raise NotImplementedError
+    # raise NotImplementedError
 
   def writePage(self, page):
     pId = page.pageId.pageIndex
