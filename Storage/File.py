@@ -307,7 +307,8 @@ class StorageFile:
     return os.path.getsize(self.filePath)
 
   def headerSize(self):
-    raise NotImplementedError
+    return self.header.size
+    # raise NotImplementedError
 
   def numPages(self):
     return (os.path.getsize(self.filePath) - self.header.size) // self.pageSize()
@@ -339,6 +340,17 @@ class StorageFile:
   # Page operations
 
   def readPage(self, pageId, page):
+    # heapfile = open(self.filePath, "rb")
+    # data = bytearray(heapfile.read())
+    # heapfile.close()
+
+    # buffer = data[(pageId.pageIndex * self.header.pageSize) + self.header.size : 
+    # (pageId.pageIndex * self.header.pageSize) + self.header.size + self.header.pageSize]
+
+    # # TODO change to page cls not SlottedPage
+    # page = SlottedPage.unpack( buffer, pageId)
+
+    # return page
     raise NotImplementedError
 
   def writePage(self, page):
@@ -359,7 +371,9 @@ class StorageFile:
   # Adds a new page to the file by writing past its end.
   def allocatePage(self):
     pId = PageId(self.fileId, self.numPages())
-    page = SlottedPage(pageId=pId, buffer=bytes(self.header.pageSize), schema=self.header.schema)
+
+    # TODO change to page cls
+    page = self.header.pageClass(pageId=pId, buffer=bytes(self.header.pageSize), schema=self.header.schema)
 
     heapfile = open(self.filePath, "ab+")
     heapfile.write(page.pack())
