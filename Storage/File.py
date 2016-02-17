@@ -264,7 +264,6 @@ class StorageFile:
       self.header    = FileHeader(pageSize=pageSize,pageClass=pageClass,schema=schema)
       self.file = open(self.filePath, "wb+")
       self.header.toFile(self.file)
-      self.file.close()
     else:
       # self.header = FileHeader(other=)
       # read from file and pass to other
@@ -341,7 +340,19 @@ class StorageFile:
     raise NotImplementedError
 
   def writePage(self, page):
-    raise NotImplementedError
+    pId = page.pageId.pageIndex
+
+    heapfile = open(self.filePath, "rb")
+    data = bytearray(heapfile.read())
+    heapfile.close()
+
+    data[(pId * self.header.pageSize) + self.header.size :
+        (pId * self.header.pageSize) + self.header.size + self.header.pageSize] = page.pack()
+
+    heapfile = open(self.filePath, "wb")
+    heapfile.write(data)
+    heapfile.close()
+    # raise NotImplementedError
 
   # Adds a new page to the file by writing past its end.
   def allocatePage(self):
