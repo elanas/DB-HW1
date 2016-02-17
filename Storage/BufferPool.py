@@ -88,6 +88,9 @@ class BufferPool:
   def evictPage(self):
     raise NotImplementedError
 
+  # Flushes all dirty pages
+  def clear(self):
+    raise NotImplementedError
 
 if __name__ == "__main__":
     import doctest

@@ -165,16 +165,18 @@ class Hw1PublicTests(unittest.TestCase):
     filem.createRelation(schema.name, schema)
     (fId, f) = filem.relationFile(schema.name)
 
-    # Since we aren't adding any data, pageIndex 1 should be the first available.
+    # Since we aren't adding any data, 
+    # The available page shouldn't change.
     # Even as we allocate more pages
+    initialPage = f.availablePage().pageIndex
     for i in range(10):
       f.allocatePage()
-      self.assertEqual(f.availablePage().pageIndex, 1)
+      self.assertEqual(f.availablePage().pageIndex, initialPage)
 
     # Now we fill some pages to check that the available page has changed.
-    for i in range(1000):
+    for i in range(2000):
       f.insertTuple(schema.pack(self.makeEmployee(i)))
-    self.assertNotEqual(f.availablePage().pageIndex, 2)
+    self.assertNotEqual(f.availablePage().pageIndex, initialPage)
     filem.close()
 
   def testFileInsertTuple(self):
