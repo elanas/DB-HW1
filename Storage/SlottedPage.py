@@ -226,7 +226,10 @@ class SlottedPageHeader(PageHeader):
     for bit in values2[4]:
       if index >= tupleCapacity:
         break
-      bitmap[index] = bit
+      if bit:
+        bitmap[index] = '0b1'
+      else:
+        bitmap[index] = '0b0'
       index = index + 1
 
     if len(values2) == 5:
@@ -473,7 +476,7 @@ class SlottedPage(Page):
     # return super().unpack(pageId, buffer)
 
     pageHeader = SlottedPageHeader.unpack(buffer)
-    return Slotted(pageId=pageId, buffer=buffer, header=pageHeader)
+    return SlottedPage(pageId=pageId, buffer=buffer, header=pageHeader)
     # raise NotImplementedError
 
 
