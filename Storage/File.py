@@ -346,16 +346,7 @@ class StorageFile:
   # Adds a new page to the file by writing past its end.
   def allocatePage(self):
     pId = PageId(self.fileId, self.numPages())
-    # page = self.header.pageClass(buffer=bytes(self.header.pageSize), schema=self.header.schema,
-    #     pageId=pid)
-
-
-
     page = SlottedPage(pageId=pId, buffer=bytes(self.header.pageSize), schema=self.header.schema)
-
-    tf = open("pagepack.txt", "w")
-    tf.write(str(page))
-    tf.close()
 
     heapfile = open(self.filePath, "ab+")
     heapfile.write(page.pack())
@@ -370,10 +361,10 @@ class StorageFile:
   # Returns the page id of the first page with available space.
   def availablePage(self):
     if len(self.freePages) == 0:
-      pid = self.allocatePage()
+      pId = self.allocatePage()
     else:
-      pid = self.freePages[0].pageId
-    return pid
+      pId = self.freePages[0].pageId
+    return pId
     # raise NotImplementedError
 
 
