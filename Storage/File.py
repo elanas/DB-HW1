@@ -6,6 +6,7 @@ from Catalog.Schema      import DBSchema
 from Storage.Page        import PageHeader, Page
 from Storage.SlottedPage import SlottedPageHeader, SlottedPage
 
+import heapq
 
 class FileHeader:
   """
@@ -250,19 +251,34 @@ class StorageFile:
     self.fileId    = kwargs.get("fileId", None)
     self.filePath  = kwargs.get("filePath", None)
 
+    # will have to read in files for "update" mode
+    # possibly use getother method
+
     ######################################################################################
     # DESIGN QUESTION: how do you initialize these?
     # The file should be opened depending on the desired mode of operation.
     # The file header may come from the file contents (i.e., if the file already exists),
     # otherwise it should be created from scratch.
-    self.header    = None
-    self.file      = None
+    
+    if mode == "create":
+      self.header    = FileHeader(pageSize=pageSize,pageClass=pageClass,schema=schema)
+      self.file = open(self.filePath, "wb+")
+      self.header.toFile(self.file)
+      self.file.close()
+    else:
+      # self.header = FileHeader(other=)
+      # read from file and pass to other
+      self.file = open(self.filePath, "rb+")
+      # self.header.toFile(self.file)
+      self.file.close()
+      raise NotImplementedError
+      # pass
 
     ######################################################################################
     # DESIGN QUESTION: what data structure do you use to keep track of the free pages?
-    self.freePages = None
+    self.freePages = []
     
-    raise NotImplementedError
+    # raise NotImplementedError
 
 
   # File control
@@ -293,7 +309,8 @@ class StorageFile:
     raise NotImplementedError
 
   def numPages(self):
-    raise NotImplementedError
+    return (os.path.getsize(self.filePath) - self.header.size) // self.pageSize()
+    # raise NotImplementedError
 
   # Returns the offset in the file corresponding to the given page id.
   # Notice this assumes the header is written before the first page,
@@ -328,11 +345,36 @@ class StorageFile:
 
   # Adds a new page to the file by writing past its end.
   def allocatePage(self):
-    raise NotImplementedError
+    pId = PageId(self.fileId, self.numPages())
+    # page = self.header.pageClass(buffer=bytes(self.header.pageSize), schema=self.header.schema,
+    #     pageId=pid)
+
+
+
+    page = SlottedPage(pageId=pId, buffer=bytes(self.header.pageSize), schema=self.header.schema)
+
+    tf = open("pagepack.txt", "w")
+    tf.write(str(page))
+    tf.close()
+
+    heapfile = open(self.filePath, "ab+")
+    heapfile.write(page.pack())
+    heapfile.close()
+
+    heapq.heappush(self.freePages, page)
+
+    return pId
+
+    # raise NotImplementedError
 
   # Returns the page id of the first page with available space.
   def availablePage(self):
-    raise NotImplementedError
+    if len(self.freePages) == 0:
+      pid = self.allocatePage()
+    else:
+      pid = self.freePages[0].pageId
+    return pid
+    # raise NotImplementedError
 
 
   # Tuple operations

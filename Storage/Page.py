@@ -457,7 +457,7 @@ class Page(BytesIO):
     view = self.getbuffer()
 
     byteHeader = self.header.pack()
-    view[0:PageHeader.size] = byteHeader    
+    view[0:self.header.size] = byteHeader  
 
     return(view)
 
