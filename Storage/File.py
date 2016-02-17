@@ -264,6 +264,7 @@ class StorageFile:
       self.header    = FileHeader(pageSize=pageSize,pageClass=pageClass,schema=schema)
       self.file = open(self.filePath, "wb+")
       self.header.toFile(self.file)
+      self.file.close()
     else:
       # self.header = FileHeader(other=)
       # read from file and pass to other
@@ -282,7 +283,8 @@ class StorageFile:
 
   # File control
   def flush(self):
-    self.file.flush()
+    # self.file.flush()
+    pass
 
   def close(self):
     if not self.file.closed:
