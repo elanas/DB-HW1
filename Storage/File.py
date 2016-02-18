@@ -270,7 +270,7 @@ class StorageFile:
       # self.header = FileHeader(other=)
       # read from file and pass to other
 
-      self.file = open(self.filePath, "wb+")
+      self.file = open(self.filePath, "rb+")
       other = FileHeader.fromFile(self.file)
       self.header = FileHeader(other=other)
 
