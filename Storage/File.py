@@ -427,7 +427,7 @@ class StorageFile:
     #   # pageBuffer = self.bufferPool.pageFromBuffer(pageId)
     #   self.bufferPool.updateBuffer(page.pageId, page.pack())
     #   return
-
+    page.header.setDirty(False)
     fileIndex = self.pageOffset(page.pageId)
 
     #heapfile = open(self.filePath, "rb")

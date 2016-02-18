@@ -141,24 +141,40 @@ class BufferPool:
   # Removes a page from the page map, returning it to the free 
   # page list without flushing the page to the disk.
   def discardPage(self, pageId):
-    raise NotImplementedError
+    offset = self.pageDict.pop(pageId)
+    self.freeList.append(offset)
+    # raise NotImplementedError
 
   def flushPage(self, pageId):
-    raise NotImplementedError
+
+    rFile = self.fileMgr.fileMap.get(pageId.fileId, None)
+    pageBuffer = self.pageFromBuffer(pageId)
+    page = rFile.pageClass().unpack(pageId, pageBuffer)
+
+    if page.header.isDirty():
+      rFile.writePage(page)
+    # raise NotImplementedError
 
   # Evict using LRU policy. 
   # We implement LRU through the use of an OrderedDict, and by moving pages
   # to the end of the ordering every time it is accessed through getPage()
   # returns offset evicted
   def evictPage(self):
-    offset = self.pageDict.pop()
+    self.flushPage(pageId)
+    tup = self.pageDict.popitem(last=False)
+    pageId = tup[0]  
+    offset = tup[1]
     self.freeList.append(offset)
     return offset
-    raise NotImplementedError
+    # raise NotImplementedError
 
   # Flushes all dirty pages
   def clear(self):
-    raise NotImplementedError
+    for pId in self.pageDict.keys():
+      self.flushPage(pId)
+
+    # raise NotImplementedError
+
 
 if __name__ == "__main__":
     import doctest
