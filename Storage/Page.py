@@ -134,7 +134,7 @@ class PageHeader:
     # tf.write(str(page.header.numTuples()) + " , " + str(newPage.header.numTuples()))
     # tf.close()
 
-    # buffer[0:self.size] = self.pack()
+    buffer[0:self.size] = self.pack()
 
   # Page header equality operation based on header fields.
   def __eq__(self, other):

@@ -6,7 +6,7 @@ from Catalog.Identifiers import PageId, FileId, TupleId
 from Catalog.Schema import DBSchema
 from Storage.Page import PageHeader, Page
 
-from bitstring import BitArray
+from bitstringmaster.bitstring import BitArray
 
 ###########################################################
 # DESIGN QUESTION 1: should this inherit from PageHeader?
@@ -105,7 +105,7 @@ class SlottedPageHeader(PageHeader):
     self.size      = self.binrepr.size
     self.freeSpaceOffset = self.size
    
-    # buffer[0:self.size] = self.pack()
+    buffer[0:self.size] = self.pack()
  #   super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), self.tupleSize)
   
   def __eq__(self, other):

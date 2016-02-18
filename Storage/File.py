@@ -344,16 +344,19 @@ class StorageFile:
     #heapfile = open(self.filePath, "rb")
     #data = bytearray(heapfile.read())
     #heapfile.close()
-    self.file.seek(0)
-    data = bytearray(self.file.read())
+    #self.file.seek(0)
+    #data = bytearray(self.file.read())
 
     fileIndex = self.pageOffset(pageId)
 
-    buffer = data[fileIndex:fileIndex + self.pageSize()]
+    self.file.seek(fileIndex)
+    pagebuffer = self.file.read(self.pageSize())
+
+    #buffer = data[fileIndex:fileIndex + self.pageSize()]
     # pageHeader = self.header.pageClass.headerClass.unpack(buffer=buffer)
 
 
-    pageHeader = (self.header.pageClass.unpack(pageId=pageId, buffer=buffer)).header
+    pageHeader = (self.header.pageClass.unpack(pageId=pageId, buffer=pagebuffer)).header
     # tf = open("tuples.txt", "w")
     # tf.write(str(pageHeader.numTuples()))
     # tf.close()
@@ -370,21 +373,21 @@ class StorageFile:
     #data = bytearray(heapfile.read())
     #heapfile.close()
 
-    self.file.seek(0)
-    data = bytearray(self.file.read())
+    #self.file.seek(0)
+    #data = bytearray(self.file.read())
 
     fileIndex = self.pageOffset(page.pageId)
 
     # splices from start of page to size of page header (page header bytes
     #  will always be in front right?) 
-    data[fileIndex : fileIndex + page.header.size] = page.header.pack()
+    #data[fileIndex : fileIndex + page.header.size] = page.header.pack()
 
     #heapfile = open(self.filePath, "wb")
     #heapfile.write(data)
     #heapfile.close()
   
-    self.file.seek(0)
-    self.file.write(data)
+    self.file.seek(fileIndex)
+    self.file.write(page.header.pack())
 
     # implemented but not tested
     # raise NotImplementedError
@@ -402,11 +405,13 @@ class StorageFile:
       self.bufferPool.updateBuffer(pageId, pageBuffer)
       return self.header.pageClass.unpack(pageId, pageBuffer)
 
-    self.file.seek(0)
-    data = bytearray(self.file.read())
+    #self.file.seek(0)
+    #data = bytearray(self.file.read())
 
     fileIndex = self.pageOffset(pageId) 
-    pageBuffer = data[fileIndex:fileIndex + self.header.pageSize]
+    #pageBuffer = data[fileIndex:fileIndex + self.header.pageSize]
+    self.file.seek(fileIndex)
+    pageBuffer = self.file.read(self.header.pageSize)
 
     self.bufferPool.updateBuffer(pageId, pageBuffer)
 
@@ -428,13 +433,14 @@ class StorageFile:
     #heapfile = open(self.filePath, "rb")
     #data = bytearray(heapfile.read())
     #heapfile.close()
-    self.file.seek(0)
-    data = bytearray(self.file.read())
+    #self.file.seek(0)
+    #data = bytearray(self.file.read())
+    self.file.seek(fileIndex)
+    self.file.write(page.pack())
+    #data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
 
-    data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
-
-    self.file.seek(0)
-    self.file.write(data)
+    #self.file.seek(0)
+    #self.file.write(data)
 
     self.bufferPool.updateBuffer(page.pageId, page.pack())
     # raise NotImplementedError
