@@ -186,7 +186,7 @@ class PageHeader:
   # This should also "allocate" the tuple, such that any subsequent call
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
-    if self.freeSpaceOffset + self.tupleSize >= self.pageCapacity:
+    if self.freeSpaceOffset + self.tupleSize > self.pageCapacity:
       return None
 
     offset = self.freeSpaceOffset
@@ -417,7 +417,7 @@ class Page(BytesIO):
 
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
-    if not self.header.hasFreeTuple:
+    if not self.header.hasFreeTuple():
       return None 
 
     tupleOffset = self.header.nextFreeTuple()

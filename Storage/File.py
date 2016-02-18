@@ -383,27 +383,25 @@ class StorageFile:
 
   # Page operations
 
-  def readPage(self, pageId, page):
+  def readPage(self, pageId, pageBuffer):
     #heapfile = open(self.filePath, "rb")
     #data = bytearray(heapfile.read())
     #heapfile.close()
 
-    #page parameter is a buffer!
-    # but return a page!
+    if self.bufferPool.hasPage(pageId):
+      pageBuffer = self.bufferPool.pageFromBuffer(pageId)
+      self.bufferPool.updateBuffer(pageId, pageBuffer)
+      return self.header.pageClass.unpack(pageId, pageBuffer)
 
     self.file.seek(0)
     data = bytearray(self.file.read())
 
     fileIndex = self.pageOffset(pageId) 
+    pageBuffer = data[fileIndex:fileIndex + self.header.pageSize]
 
-    page = data[fileIndex:fileIndex + self.header.pageSize]
-    
-    
+    self.bufferPool.updateBuffer(pageId, pageBuffer)
 
-    # # TODO change to page cls not SlottedPage
-    # page = SlottedPage.unpack( buffer, pageId)
-
-    return self.header.pageClass.unpack(pageId, page)
+    return self.header.pageClass.unpack(pageId, pageBuffer)
     # raise NotImplementedError
 
   def writePage(self, page):
@@ -411,8 +409,12 @@ class StorageFile:
     # tf.write(str(page.header.numTuples()))
     # tf.close()
 
-    fileIndex = self.pageOffset(page.pageId)
+    if self.bufferPool.hasPage(page.pageId):
+      # pageBuffer = self.bufferPool.pageFromBuffer(pageId)
+      self.bufferPool.updateBuffer(page.pageId, page.pack())
+      return
 
+    fileIndex = self.pageOffset(page.pageId)
 
     #heapfile = open(self.filePath, "rb")
     #data = bytearray(heapfile.read())
@@ -422,19 +424,10 @@ class StorageFile:
 
     data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
 
-    newPage = self.header.pageClass.unpack(pageId=page.pageId, buffer=page.pack())
-
-    tf = open("numtuples.txt", "w")
-    tf.write(str(page.header.numTuples()) + " , " + str(newPage.header.numTuples()))
-    tf.close()
-
-    #heapfile = open(self.filePath, "wb")
-    #heapfile.write(data)
-    #heapfile.close()
     self.file.seek(0)
     self.file.write(data)
 
-
+    self.bufferPool.updateBuffer(page.pageId, page.pack())
     # raise NotImplementedError
 
   # Adds a new page to the file by writing past its end.
@@ -448,7 +441,6 @@ class StorageFile:
     #heapfile.close()
     self.file.seek(0, 2) #should seek to the end of the file
     self.file.write(page.pack())
-
     self.freePages.append(page)
 
     return pId
