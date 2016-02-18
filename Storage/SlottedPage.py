@@ -105,7 +105,7 @@ class SlottedPageHeader(PageHeader):
     self.size      = self.binrepr.size
     self.freeSpaceOffset = self.size
    
-    # buffer[0:self.size] = self.pack()
+    buffer[0:self.size] = self.pack()
  #   super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), self.tupleSize)
   
   def __eq__(self, other):
