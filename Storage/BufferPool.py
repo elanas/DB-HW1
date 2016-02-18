@@ -77,7 +77,21 @@ class BufferPool:
     # raise NotImplementedError
   
   def getPage(self, pageId):
-    raise NotImplementedError
+    if len(self.freeList) == 0:
+      #evict
+      self.evictPage()
+
+    offset = self.freeList.pop(0)
+
+    view = self.pool.getbuffer()
+    pagebuffer = view[offset : offset + self.pageSize]
+
+    page = self.fileMgr.readPage(pageId, pagebuffer)
+
+    self.pageDict[pageId] = offset
+    view[offset : offset + self.pageSize] = pagebuffer
+    return page
+    # raise NotImplementedError
 
   # Removes a page from the page map, returning it to the free 
   # page list without flushing the page to the disk.

@@ -397,11 +397,6 @@ class StorageFile:
     fileIndex = self.pageOffset(pageId) 
 
     page = data[fileIndex:fileIndex + self.header.pageSize]
-    
-    
-
-    # # TODO change to page cls not SlottedPage
-    # page = SlottedPage.unpack( buffer, pageId)
 
     return self.header.pageClass.unpack(pageId, page)
     # raise NotImplementedError
@@ -413,7 +408,6 @@ class StorageFile:
 
     fileIndex = self.pageOffset(page.pageId)
 
-
     #heapfile = open(self.filePath, "rb")
     #data = bytearray(heapfile.read())
     #heapfile.close()
@@ -422,15 +416,6 @@ class StorageFile:
 
     data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
 
-    newPage = self.header.pageClass.unpack(pageId=page.pageId, buffer=page.pack())
-
-    tf = open("numtuples.txt", "w")
-    tf.write(str(page.header.numTuples()) + " , " + str(newPage.header.numTuples()))
-    tf.close()
-
-    #heapfile = open(self.filePath, "wb")
-    #heapfile.write(data)
-    #heapfile.close()
     self.file.seek(0)
     self.file.write(data)
 
@@ -448,7 +433,6 @@ class StorageFile:
     #heapfile.close()
     self.file.seek(0, 2) #should seek to the end of the file
     self.file.write(page.pack())
-
     self.freePages.append(page)
 
     return pId

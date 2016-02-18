@@ -96,7 +96,7 @@ class SlottedPageHeader(PageHeader):
       raise ValueError("No backing buffer supplied for SlottedPageHeader")
 
     if self.bitmap == None:
-      headerSizeWithoutBitmap = struct.Struct("chhh").size
+      headerSizeWithoutBitmap = struct.Struct("cHHH").size
       tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tupleSize)))
       bString = '0b' + ('0' * tupleCapacity)
       self.bitmap = BitArray(bString)
@@ -105,7 +105,7 @@ class SlottedPageHeader(PageHeader):
     self.size      = self.binrepr.size
     self.freeSpaceOffset = self.size
    
-    buffer[0:self.size] = self.pack()
+    # buffer[0:self.size] = self.pack()
  #   super().__init__(buffer=buffer, flags=kwargs.get("flags", b'\x00'), self.tupleSize)
   
   def __eq__(self, other):
@@ -217,9 +217,12 @@ class SlottedPageHeader(PageHeader):
   # Create a binary representation of a slotted page header.
   # The binary representation should include the slot contents.
   def pack(self):
+
+    byteArray = bytearray(self.bitmap)
+
     return self.binrepr.pack(
               self.flags, self.tupleSize,
-              self.freeSpaceOffset, self.pageCapacity, self.bitmap.tobytes())
+              self.freeSpaceOffset, self.pageCapacity, byteArray)
 
   # Create a slotted page header instance from a binary representation held in the given buffer.
   @classmethod
@@ -227,13 +230,14 @@ class SlottedPageHeader(PageHeader):
     binrepr1 = struct.Struct("cHHH")
     values1 = binrepr1.unpack_from(buffer)
 
-    headerSizeWithoutBitmap = struct.Struct("chhh").size
+    headerSizeWithoutBitmap = binrepr1.size
     tupleCapacity = math.floor((8*(values1[3]-headerSizeWithoutBitmap))/(1+(8*values1[1])))
-    bString = '0b' + ('0' * tupleCapacity)
-    bitmap = BitArray(bString)
-   
+
     binrepr2   = struct.Struct("cHHH" + str(math.ceil(tupleCapacity/8)) + 's')
     values2 = binrepr2.unpack_from(buffer)
+
+    bString = '0b' + ('0' * tupleCapacity)
+    bitmap = BitArray(bString)
 
     index = 0
     for bit in values2[4]:
@@ -463,7 +467,20 @@ class SlottedPage(Page):
   # This should refresh the binary representation of the page header contained
   # within the page by packing the header in place.
   def pack(self):
-    return super().pack()
+
+    view = self.getbuffer()
+
+    byteHeader = self.header.pack()
+    view[0:self.header.size] = byteHeader 
+
+    tf = open("size.txt", "w")
+    tf.write(str(self.header.size))
+    tf.close() 
+
+    return(view)
+
+
+    # return super().pack()
 
   # Creates a Page instance from the binary representation held in the buffer.
   # The pageId of the newly constructed Page instance is given as an argument.
