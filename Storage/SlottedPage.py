@@ -6,7 +6,7 @@ from Catalog.Identifiers import PageId, FileId, TupleId
 from Catalog.Schema import DBSchema
 from Storage.Page import PageHeader, Page
 
-from bitstringmaster.bitstring import BitArray
+from bitstring import BitArray
 
 ###########################################################
 # DESIGN QUESTION 1: should this inherit from PageHeader?
@@ -453,6 +453,8 @@ class SlottedPage(Page):
     view[self.header.size + bitTuple[0] * self.header.tupleSize : self.header.size + bitTuple[0] * self.header.tupleSize + self.header.tupleSize] = tupleData
     self.header.bitmap[bitTuple[0]] = '0b1'
 
+    self.header.setDirty(0b1)
+
     return tupleID
 
   # Zeroes out the contents of the tuple at the given tuple id.
@@ -462,6 +464,7 @@ class SlottedPage(Page):
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
     self.header.bitmap[tupleId.tupleIndex * self.header.tupleSize] = '0b0'
+    self.setDirty(0b1)
 
   # Returns a binary representation of this page.
   # This should refresh the binary representation of the page header contained

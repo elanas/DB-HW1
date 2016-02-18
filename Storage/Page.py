@@ -415,6 +415,8 @@ class Page(BytesIO):
     view = self.getbuffer()
     view[offset:offset + self.header.tupleSize] = tupleData
 
+    self.setDirty(0b1)
+
   # Adds a packed tuple to the page. Returns the tuple id of the newly added tuple.
   def insertTuple(self, tupleData):
     if not self.header.hasFreeTuple():
@@ -427,6 +429,7 @@ class Page(BytesIO):
     view = self.getbuffer()
     view[tupleOffset:tupleOffset + self.header.tupleSize] = tupleData
 
+    self.setDirty(0b1)
     return tupleID
 
   # Zeroes out the contents of the tuple at the given tuple id.
@@ -437,6 +440,8 @@ class Page(BytesIO):
 
     for i in range(self.header.tupleSize):
       view[i + tupleOffset : i + tupleOffset + 1] = b'\x00'
+
+    self.setDirty(0b1)
 
   # Removes the tuple at the given tuple id, shifting subsequent tuples.
   def deleteTuple(self, tupleId):
@@ -453,6 +458,9 @@ class Page(BytesIO):
     self.clearTuple(toClearID)
 
     self.header.freeSpaceOffset -= self.header.tupleSize
+
+    self.setDirty(0b1)
+
 
   # Returns a binary representation of this page.
   # This should refresh the binary representation of the page header contained
