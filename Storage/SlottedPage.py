@@ -6,7 +6,7 @@ from Catalog.Identifiers import PageId, FileId, TupleId
 from Catalog.Schema import DBSchema
 from Storage.Page import PageHeader, Page
 
-from bitstring import BitArray
+from bitstringmaster.bitstring import BitArray
 
 ###########################################################
 # DESIGN QUESTION 1: should this inherit from PageHeader?
