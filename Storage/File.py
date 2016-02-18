@@ -259,7 +259,8 @@ class StorageFile:
     # The file should be opened depending on the desired mode of operation.
     # The file header may come from the file contents (i.e., if the file already exists),
     # otherwise it should be created from scratch.
-    
+    self.freePages = []
+
     if mode == "create":
       self.header    = FileHeader(pageSize=pageSize,pageClass=pageClass,schema=schema)
       self.file = open(self.filePath, "wb+")
@@ -268,15 +269,23 @@ class StorageFile:
     else:
       # self.header = FileHeader(other=)
       # read from file and pass to other
-      self.file = open(self.filePath, "rb+")
+
+      self.file = open(self.filePath, "wb+")
+      other = FileHeader.fromFile(self.file)
+      self.header = FileHeader(other=other)
+
+      for p in self.pages():
+        if p.header.hasFreeTuple():
+          self.freePages.append(p)
+
       # self.header.toFile(self.file)
-      self.file.close()
-      raise NotImplementedError
+      # self.file.close()
+      # raise NotImplementedError
       # pass
 
     ######################################################################################
     # DESIGN QUESTION: what data structure do you use to keep track of the free pages?
-    self.freePages = []
+    
     
     # raise NotImplementedError
 
@@ -378,7 +387,7 @@ class StorageFile:
     self.file.write(data)
 
     # implemented but not tested
-    raise NotImplementedError
+    # raise NotImplementedError
 
 
   # Page operations
@@ -461,14 +470,14 @@ class StorageFile:
 
   # Inserts the given tuple to the first available page.
   def insertTuple(self, tupleData):
-    page = self.availablePage()
-    page.insertTuple(tupleData)
+    # page = self.availablePage()
+    # page.insertTuple(tupleData)
 
 
-    # need to make sure heap readjusts, and has a custom compare
-    # have tuple inserted into heap with first element being
-    # what should be compared, in this case #num tuple free space
-    self.freePages.heapify()
+    # # need to make sure heap readjusts, and has a custom compare
+    # # have tuple inserted into heap with first element being
+    # # what should be compared, in this case #num tuple free space
+    # self.freePages.heapify()
 
     # still need to write to disk the changed page or maybe not?
 
