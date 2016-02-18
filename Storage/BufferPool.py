@@ -108,11 +108,14 @@ class BufferPool:
   
   def getPage(self, pageId):
     if self.hasPage(pageId):
-      pagebuffer = self.pageFromBuffer(pageId)
-      page = self.fileMgr.readPage(pageId, pagebuffer)
+      pageBuffer = self.pageFromBuffer(pageId)
+      self.updateBuffer(pageId, pageBuffer)
+
+      rFile = self.fileMgr.fileMap.get(pageId.fileId, None)
+      page = rFile.pageClass().unpack(pageId, pageBuffer)
+
       return page
  
-
     if len(self.freeList) == 0:
       #evict
       self.evictPage()
@@ -120,12 +123,18 @@ class BufferPool:
     offset = self.freeList.pop(0)
 
     view = self.pool.getbuffer()
-    pagebuffer = view[offset : offset + self.pageSize]
+    pageBuffer = view[offset : offset + self.pageSize]
 
-    page = self.fileMgr.readPage(pageId, pagebuffer)
+    page = self.fileMgr.readPage(pageId, pageBuffer)
+    # self.updateBuffer(pageId, pagebuffer)
 
-    self.pageDict[pageId] = offset
-    view[offset : offset + self.pageSize] = pagebuffer
+    self.pageDict[pageId] = offset 
+    view[offset : offset + self.pageSize] = page.pack()
+
+    # self.pageDict[pageId] = offset
+    # view[offset : offset + self.pageSize] = pageBuffer
+
+
     return page
     # raise NotImplementedError
 

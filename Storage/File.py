@@ -350,7 +350,7 @@ class StorageFile:
     fileIndex = self.pageOffset(pageId)
 
     self.file.seek(fileIndex)
-    pagebuffer = self.file.read(self.pageSize())
+    pagebuffer = bytearray(self.file.read(self.pageSize()))
 
     #buffer = data[fileIndex:fileIndex + self.pageSize()]
     # pageHeader = self.header.pageClass.headerClass.unpack(buffer=buffer)
@@ -400,10 +400,10 @@ class StorageFile:
     #data = bytearray(heapfile.read())
     #heapfile.close()
 
-    if self.bufferPool.hasPage(pageId):
-      pageBuffer = self.bufferPool.pageFromBuffer(pageId)
-      self.bufferPool.updateBuffer(pageId, pageBuffer)
-      return self.header.pageClass.unpack(pageId, pageBuffer)
+    # if self.bufferPool.hasPage(pageId):
+    #   pageBuffer = self.bufferPool.pageFromBuffer(pageId)
+    #   self.bufferPool.updateBuffer(pageId, pageBuffer)
+    #   return self.header.pageClass.unpack(pageId, pageBuffer)
 
     #self.file.seek(0)
     #data = bytearray(self.file.read())
@@ -411,9 +411,9 @@ class StorageFile:
     fileIndex = self.pageOffset(pageId) 
     #pageBuffer = data[fileIndex:fileIndex + self.header.pageSize]
     self.file.seek(fileIndex)
-    pageBuffer = self.file.read(self.header.pageSize)
+    pageBuffer = bytearray(self.file.read(self.header.pageSize))
 
-    self.bufferPool.updateBuffer(pageId, pageBuffer)
+    # self.bufferPool.updateBuffer(pageId, pageBuffer)
 
     return self.header.pageClass.unpack(pageId, pageBuffer)
     # raise NotImplementedError
@@ -423,10 +423,10 @@ class StorageFile:
     # tf.write(str(page.header.numTuples()))
     # tf.close()
 
-    if self.bufferPool.hasPage(page.pageId):
-      # pageBuffer = self.bufferPool.pageFromBuffer(pageId)
-      self.bufferPool.updateBuffer(page.pageId, page.pack())
-      return
+    # if self.bufferPool.hasPage(page.pageId):
+    #   # pageBuffer = self.bufferPool.pageFromBuffer(pageId)
+    #   self.bufferPool.updateBuffer(page.pageId, page.pack())
+    #   return
 
     fileIndex = self.pageOffset(page.pageId)
 
@@ -436,13 +436,14 @@ class StorageFile:
     #self.file.seek(0)
     #data = bytearray(self.file.read())
     self.file.seek(fileIndex)
+
     self.file.write(page.pack())
     #data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
 
     #self.file.seek(0)
     #self.file.write(data)
 
-    self.bufferPool.updateBuffer(page.pageId, page.pack())
+    # self.bufferPool.updateBuffer(page.pageId, page.pack())
     # raise NotImplementedError
 
   # Adds a new page to the file by writing past its end.
