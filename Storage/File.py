@@ -264,7 +264,7 @@ class StorageFile:
       self.header    = FileHeader(pageSize=pageSize,pageClass=pageClass,schema=schema)
       self.file = open(self.filePath, "wb+")
       self.header.toFile(self.file)
-      self.file.close()
+      #self.file.close()
     else:
       # self.header = FileHeader(other=)
       # read from file and pass to other
@@ -283,8 +283,8 @@ class StorageFile:
 
   # File control
   def flush(self):
-    # self.file.flush()
-    pass
+    self.file.flush()
+    #pass
 
   def close(self):
     if not self.file.closed:
@@ -311,7 +311,10 @@ class StorageFile:
     # raise NotImplementedError
 
   def numPages(self):
-    return (os.path.getsize(self.filePath) - self.header.size) // self.pageSize()
+    #return (os.path.getsize(self.filePath) - self.header.size) // self.pageSize()
+    self.file.seek(0,2) # should seek to the end
+    fileSize = self.file.tell() # returns current position
+    return (fileSize - self.header.size) // self.pageSize()
     # raise NotImplementedError
 
   # Returns the offset in the file corresponding to the given page id.
@@ -329,9 +332,11 @@ class StorageFile:
 
   # Reads a page header from disk.
   def readPageHeader(self, pageId):
-    heapfile = open(self.filePath, "rb")
-    data = bytearray(heapfile.read())
-    heapfile.close()
+    #heapfile = open(self.filePath, "rb")
+    #data = bytearray(heapfile.read())
+    #heapfile.close()
+    self.file.seek(0)
+    data = bytearray(self.file.read())
 
     fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
 
@@ -339,18 +344,18 @@ class StorageFile:
     pageHeader = self.header.pageClass.headerClass.unpack(buffer=buffer)
     return pageHeader
 
-    # implemented but not tested
-    # raise NotImplementedError
-
   # Writes a page header to disk.
   # The page must already exist, that is we cannot extend the file with only a page header.
   def writePageHeader(self, page):
     
     # have to check that page exists
 
-    heapfile = open(self.filePath, "rb")
-    data = bytearray(heapfile.read())
-    heapfile.close()
+    #heapfile = open(self.filePath, "rb")
+    #data = bytearray(heapfile.read())
+    #heapfile.close()
+
+    self.file.seek(0)
+    data = bytearray(self.file.read())
 
     fileIndex = (page.pageId.pageIndex * self.header.pageSize) + self.header.size 
 
@@ -358,9 +363,12 @@ class StorageFile:
     #  will always be in front right?) 
     data[fileIndex : fileIndex + page.header.size] = page.header.pack()
 
-    heapfile = open(self.filePath, "wb")
-    heapfile.write(data)
-    heapfile.close()
+    #heapfile = open(self.filePath, "wb")
+    #heapfile.write(data)
+    #heapfile.close()
+  
+    self.file.seek(0)
+    self.file.write(data)
 
     # implemented but not tested
     raise NotImplementedError
@@ -369,9 +377,11 @@ class StorageFile:
   # Page operations
 
   def readPage(self, pageId, page):
-    heapfile = open(self.filePath, "rb")
-    data = bytearray(heapfile.read())
-    heapfile.close()
+    #heapfile = open(self.filePath, "rb")
+    #data = bytearray(heapfile.read())
+    #heapfile.close()
+    self.file.seek(0)
+    data = bytearray(self.file.read())
 
     fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
 
@@ -393,17 +403,20 @@ class StorageFile:
     fileIndex = (page.pageId.pageIndex * self.header.pageSize) + self.header.size 
 
 
-    heapfile = open(self.filePath, "rb")
-    data = bytearray(heapfile.read())
-    heapfile.close()
+    #heapfile = open(self.filePath, "rb")
+    #data = bytearray(heapfile.read())
+    #heapfile.close()
+    self.file.seek(0)
+    data = bytearray(self.file.read())
 
     data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
 
-    
 
-    heapfile = open(self.filePath, "wb")
-    heapfile.write(data)
-    heapfile.close()
+    #heapfile = open(self.filePath, "wb")
+    #heapfile.write(data)
+    #heapfile.close()
+    self.file.seek(0)
+    self.file.write(data)
 
 
     # raise NotImplementedError
@@ -414,9 +427,11 @@ class StorageFile:
 
     page = self.header.pageClass(pageId=pId, buffer=bytes(self.header.pageSize), schema=self.header.schema)
 
-    heapfile = open(self.filePath, "ab+")
-    heapfile.write(page.pack())
-    heapfile.close()
+    #heapfile = open(self.filePath, "ab+")
+    #heapfile.write(page.pack())
+    #heapfile.close()
+    self.file.seek(0, 2) #should seek to the end of the file
+    data = bytearray(self.file.read())
 
     heapq.heappush(self.freePages, page)
 
