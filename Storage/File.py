@@ -338,10 +338,17 @@ class StorageFile:
     self.file.seek(0)
     data = bytearray(self.file.read())
 
-    fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
+    fileIndex = self.pageOffset(pageId)
 
-    buffer = data[fileIndex:fileIndex + self.header.pageSize]
-    pageHeader = self.header.pageClass.headerClass.unpack(buffer=buffer)
+    buffer = data[fileIndex:fileIndex + self.pageSize()]
+    # pageHeader = self.header.pageClass.headerClass.unpack(buffer=buffer)
+
+
+    pageHeader = (self.header.pageClass.unpack(pageId=pageId, buffer=buffer)).header
+    # tf = open("tuples.txt", "w")
+    # tf.write(str(pageHeader.numTuples()))
+    # tf.close()
+
     return pageHeader
 
   # Writes a page header to disk.
@@ -357,7 +364,7 @@ class StorageFile:
     self.file.seek(0)
     data = bytearray(self.file.read())
 
-    fileIndex = (page.pageId.pageIndex * self.header.pageSize) + self.header.size 
+    fileIndex = self.pageOffset(page.pageId)
 
     # splices from start of page to size of page header (page header bytes
     #  will always be in front right?) 
@@ -380,19 +387,23 @@ class StorageFile:
     #heapfile = open(self.filePath, "rb")
     #data = bytearray(heapfile.read())
     #heapfile.close()
+
+    #page parameter is a buffer!
+    # but return a page!
+
     self.file.seek(0)
     data = bytearray(self.file.read())
 
-    fileIndex = (pageId.pageIndex * self.header.pageSize) + self.header.size 
+    fileIndex = self.pageOffset(pageId) 
 
-    buffer = data[fileIndex:fileIndex + self.header.pageSize]
+    page = data[fileIndex:fileIndex + self.header.pageSize]
     
-    page = self.header.pageClass.unpack(pageId, buffer)
+    
 
     # # TODO change to page cls not SlottedPage
     # page = SlottedPage.unpack( buffer, pageId)
 
-    return page
+    return self.header.pageClass.unpack(pageId, page)
     # raise NotImplementedError
 
   def writePage(self, page):
@@ -400,7 +411,7 @@ class StorageFile:
     # tf.write(str(page.header.numTuples()))
     # tf.close()
 
-    fileIndex = (page.pageId.pageIndex * self.header.pageSize) + self.header.size 
+    fileIndex = self.pageOffset(page.pageId)
 
 
     #heapfile = open(self.filePath, "rb")
@@ -411,6 +422,11 @@ class StorageFile:
 
     data[fileIndex : fileIndex + self.header.pageSize] = page.pack()
 
+    newPage = self.header.pageClass.unpack(pageId=page.pageId, buffer=page.pack())
+
+    tf = open("numtuples.txt", "w")
+    tf.write(str(page.header.numTuples()) + " , " + str(newPage.header.numTuples()))
+    tf.close()
 
     #heapfile = open(self.filePath, "wb")
     #heapfile.write(data)
@@ -431,9 +447,9 @@ class StorageFile:
     #heapfile.write(page.pack())
     #heapfile.close()
     self.file.seek(0, 2) #should seek to the end of the file
-    data = bytearray(self.file.read())
+    self.file.write(page.pack())
 
-    heapq.heappush(self.freePages, page)
+    self.freePages.append(page)
 
     return pId
 

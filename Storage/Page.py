@@ -128,9 +128,13 @@ class PageHeader:
     self.flags           = kwargs.get("flags", b'\x00')
     self.tupleSize       = kwargs.get("tupleSize", None)
     self.pageCapacity    = kwargs.get("pageCapacity", len(buffer))
-    self.freeSpaceOffset = self.size
+    self.freeSpaceOffset = kwargs.get("freeSpaceOffset", self.size)
 
-    buffer[0:self.size] = self.pack()
+    # tf = open("numtuples.txt", "a")
+    # tf.write(str(page.header.numTuples()) + " , " + str(newPage.header.numTuples()))
+    # tf.close()
+
+    # buffer[0:self.size] = self.pack()
 
   # Page header equality operation based on header fields.
   def __eq__(self, other):
@@ -207,6 +211,7 @@ class PageHeader:
   @classmethod
   def unpack(cls, buffer):
     values = PageHeader.binrepr.unpack_from(buffer)
+
     if len(values) == 4:
       return cls(buffer=buffer, flags=values[0], tupleSize=values[1],
                  freeSpaceOffset=values[2], pageCapacity=values[3])
@@ -469,6 +474,7 @@ class Page(BytesIO):
   def unpack(cls, pageId, buffer):
     
     pageHeader = PageHeader.unpack(buffer)
+
     return Page(pageId=pageId, buffer=buffer, header=pageHeader)
 
     # raise NotImplementedError
