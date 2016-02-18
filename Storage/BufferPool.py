@@ -55,10 +55,14 @@ class BufferPool:
   # Basic statistics
 
   def numPages(self):
-    return math.floor(self.poolSize / self.pageSize)
+    return math.floor(self.poolSize // self.pageSize)
 
   def numFreePages(self):
-    raise NotImplementedError
+    tf = open("num.txt", "w")
+    tf.write(str(self.numPages()) + ", " + str(len(self.freeList)))
+    tf.close()
+    return len(self.freeList)
+    # raise NotImplementedError
 
   def size(self):
     return self.poolSize
@@ -69,6 +73,32 @@ class BufferPool:
   def usedSpace(self):
     return self.size() - self.freeSpace()
 
+  # helper methods
+  def pageFromBuffer(self, pageId):
+    if not self.hasPage(pageId):
+      return None
+
+    view = self.pool.getbuffer()
+
+    offset = self.pageDict[pageId]
+    pageBuffer = view[offset : offset + self.pageSize]
+
+    return pageBuffer
+
+  def updateBuffer(self, pageId, pageBuffer):
+    if self.hasPage(pageId):
+      offset = self.pageDict[pageId]
+      self.pageDict.pop(pageId)
+    elif len(self.freeList) > 0:
+      offset = self.freeList.pop(0)
+    else:
+      self.evictPage()
+      offset = self.freeList.pop(0)
+      
+    self.pageDict[pageId] = offset
+
+    view = self.pool.getbuffer()
+    view[offset : offset + self.pageSize] = pageBuffer
 
   # Buffer pool operations
 
@@ -77,6 +107,12 @@ class BufferPool:
     # raise NotImplementedError
   
   def getPage(self, pageId):
+    if self.hasPage(pageId):
+      pagebuffer = self.pageFromBuffer(pageId)
+      page = self.fileMgr.readPage(pageId, pagebuffer)
+      return page
+ 
+
     if len(self.freeList) == 0:
       #evict
       self.evictPage()
@@ -104,7 +140,11 @@ class BufferPool:
   # Evict using LRU policy. 
   # We implement LRU through the use of an OrderedDict, and by moving pages
   # to the end of the ordering every time it is accessed through getPage()
+  # returns offset evicted
   def evictPage(self):
+    offset = self.pageDict.pop()
+    self.freeList.append(offset)
+    return offset
     raise NotImplementedError
 
   # Flushes all dirty pages
