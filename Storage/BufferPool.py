@@ -161,9 +161,10 @@ class BufferPool:
   # to the end of the ordering every time it is accessed through getPage()
   # returns offset evicted
   def evictPage(self):
+    pageId = next(iter(self.pageDict))
     self.flushPage(pageId)
     tup = self.pageDict.popitem(last=False)
-    pageId = tup[0]  
+    pageId = tup[0]  # should be the same as it just was
     offset = tup[1]
     self.freeList.append(offset)
     return offset
