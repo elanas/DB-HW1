@@ -6,7 +6,7 @@ from Catalog.Identifiers import PageId, FileId, TupleId
 from Catalog.Schema import DBSchema
 from Storage.Page import PageHeader, Page
 
-from bitstring import BitArray
+from bitstringmaster.bitstring import BitArray
 
 ###########################################################
 # DESIGN QUESTION 1: should this inherit from PageHeader?
@@ -201,13 +201,24 @@ class SlottedPageHeader(PageHeader):
   # This should also "allocate" the tuple, such that any subsequent call
   # does not yield the same tupleIndex.
   def nextFreeTuple(self):
-    nextTuple = self.bitmap.find('0b0')
+    #nextTuple = self.bitmap.find('0b0')
 
-    if nextTuple == ():
+    #if nextTuple == ():
+    #  return None
+    
+    #headerSizeWithoutBitmap = struct.Struct("cHHH").size
+    #tupleCapacity = math.floor((8*(self.pageCapacity-headerSizeWithoutBitmap))/(1+(8*self.tupleSize)))
+    #if nextTuple[0] >= tupleCapacity:
+    #  return None
+
+    #self.bitmap[nextTuple[0]] = '0b1'
+    #return nextTuple[0]
+    if self.hasFreeTuple():
+      nextTuple = self.bitmap.find('0b0')
+      self.bitmap[nextTuple[0]] = '0b1'
+      return nextTuple[0]
+    else:
       return None
-
-    self.bitmap[nextTuple[0]] = '0b1'
-    return nextTuple[0]
 
   def nextTupleRange(self):
     start = self.nextFreeTuple()
