@@ -218,19 +218,13 @@ class SlottedPageHeader(PageHeader):
   # Create a binary representation of a slotted page header.
   # The binary representation should include the slot contents.
   def pack(self):
-    tf = open("bitmap.txt", "w")
-    # tf.write(str(len(self.bitmap)) + " ")
     byteArray = bytearray(self.bitmap)
-
 
     packed = self.binrepr.pack(
               self.flags, self.tupleSize,
               self.freeSpaceOffset, self.pageCapacity, byteArray)
     unpacked = self.binrepr.unpack_from(packed)
 
-
-    tf.write(str(len(unpacked[4])) + "\n")
-    tf.close()
     return self.binrepr.pack(
               self.flags, self.tupleSize,
               self.freeSpaceOffset, self.pageCapacity, byteArray)
@@ -250,15 +244,8 @@ class SlottedPageHeader(PageHeader):
     bString = '0b' + ('0' * tupleCapacity)
     bitmap = BitArray(bString)
 
-    # byteArray = values2[4].size()
-
-    tf = open("tuple.txt", "w")
-    # tf.write(str(tupleCapacity))
-    # tf.write(str(len(values2[4])))
-    tf.write(str(list(values2[4])))
     index = 0
     for bit in values2[4]:
-      # tf.write(str(index) + " ")
       if index >= tupleCapacity:
         break
       if bit:
@@ -266,8 +253,6 @@ class SlottedPageHeader(PageHeader):
       else:
         bitmap[index] = '0b0'
       index = index + 1
-
-    tf.close()
 
     if len(values2) == 5:
       return cls(buffer=buffer, flags=values2[0], tupleSize=values2[1],
@@ -476,14 +461,6 @@ class SlottedPage(Page):
     if self.header.pageCapacity - offset < 8:
       return None
 
-    tf = open("insert.txt", "w")
-    tf.write(str(offset) + " ")
-    tf.write(str(self.header.tupleSize) + " ")
-    tf.write(str(self.header.pageCapacity))
-    tf.write(str(type(view[offset : offset + self.header.tupleSize])) + " ")
-    tf.write(str(type(tupleData)))
-    tf.close()
-
     view[offset : offset + self.header.tupleSize] = tupleData
     self.header.bitmap[bitTuple[0]] = '0b1'
 
@@ -510,12 +487,7 @@ class SlottedPage(Page):
     byteHeader = self.header.pack()
     view[0:self.header.size] = byteHeader 
 
-    tf = open("size.txt", "w")
-    tf.write(str(self.header.size))
-    tf.close() 
-
     return(view)
-
 
     # return super().pack()
 

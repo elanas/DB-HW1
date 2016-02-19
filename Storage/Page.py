@@ -130,10 +130,6 @@ class PageHeader:
     self.pageCapacity    = kwargs.get("pageCapacity", len(buffer))
     self.freeSpaceOffset = kwargs.get("freeSpaceOffset", self.size)
 
-    # tf = open("numtuples.txt", "a")
-    # tf.write(str(page.header.numTuples()) + " , " + str(newPage.header.numTuples()))
-    # tf.close()
-
     buffer[0:self.size] = self.pack()
 
   # Page header equality operation based on header fields.

@@ -502,31 +502,20 @@ class StorageFile:
     # # need to make sure heap readjusts, and has a custom compare
     # # have tuple inserted into heap with first element being
     # # what should be compared, in this case #num tuple free space
-    # self.freePages.heapify()
-
+    
     # still need to write to disk the changed page or maybe not?
-    # tf = open("space.txt", "a")
 
     pId = self.availablePage()
     page = self.bufferPool.getPage(pId)
 
-    # tf.write(str(page.header.freeSpace()) + " ")
     tId = TupleId(pId, page.header.numTuples())
     page.insertTuple(tupleData)
-    # tf.write(str(page.header.freeSpace()) + "\n")
-    # tf.close()
-
-    # tf = open("remove.txt", "a")
-    # tf.write(str(page.header.hasFreeTuple()) + "\n")
 
     if page.header.hasFreeTuple() == False:
-      # tf.write("TRYING TO REMOVE PAGE")
-      # self.freePages.remove(0)
       del self.freePages[0]
     # raise NotImplementedError
     self.bufferPool.updateBuffer(pId, page.pack())
     return tId
-    # tf.close()
 
   # Removes the tuple by its id, tracking if the page is now free
   def deleteTuple(self, tupleId):
