@@ -40,6 +40,7 @@ class BufferPool:
     self.poolSize     = kwargs.get("poolSize", BufferPool.defaultPoolSize)
     self.pool         = io.BytesIO(b'\x00' * self.poolSize)
 
+
     ####################################################################################
     # DESIGN QUESTION: what other data structures do we need to keep in the buffer pool?
     self.freeList     = []

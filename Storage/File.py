@@ -274,9 +274,22 @@ class StorageFile:
       other = FileHeader.fromFile(self.file)
       self.header = FileHeader(other=other)
 
-      for p in self.pages():
-        if p.header.hasFreeTuple():
-          self.freePages.append(p)
+      self.file.seek(0)
+      data = bytearray(self.file.read())
+
+      x = self.header.size
+      pageCounter = 0
+      while (x + self.header.pageSize) <= len(data):
+        pagebuffer = data[x :  x + self.header.pageSize]
+        pId = PageId(self.fileId, pageCounter)
+        page = pageClass.unpack(pId, pagebuffer)
+        self.freePages.append(page)
+        pageCounter += 1
+        x += self.header.pageSize
+
+      # for p in self.pages():
+      #   if p.header.hasFreeTuple():
+      #     self.freePages.append(p)
 
       # self.header.toFile(self.file)
       # self.file.close()
@@ -288,7 +301,6 @@ class StorageFile:
     
     
     # raise NotImplementedError
-
 
   # File control
   def flush(self):
@@ -475,6 +487,12 @@ class StorageFile:
 
   # Tuple operations
 
+  def numTuples(self):
+    count = 0
+    for h in self.headers():
+      count += h[1].numTuples()
+    return count
+
   # Inserts the given tuple to the first available page.
   def insertTuple(self, tupleData):
     # page = self.availablePage()
@@ -487,16 +505,34 @@ class StorageFile:
     # self.freePages.heapify()
 
     # still need to write to disk the changed page or maybe not?
+    pId = self.availablePage()
+    page = self.bufferPool.getPage(pId)
+    page.insertTuple(tupleData)
 
-    raise NotImplementedError
+    if page.header.hasFreeTuple() == False:
+      self.freePages.remove(page)
+    # raise NotImplementedError
+    self.bufferPool.updateBuffer(pId, page.pack())
 
   # Removes the tuple by its id, tracking if the page is now free
   def deleteTuple(self, tupleId):
-    raise NotImplementedError
+    pId = tupleId.pageId
+    page = self.bufferPool.getPage(pId)
+
+    if page.header.hasFreeTuple() == False:
+      self.freePages.append(page)
+
+    page.deleteTuple(tupleId)
+    self.bufferPool.updateBuffer(pId, page.pack())
+    # raise NotImplementedError
 
   # Updates the tuple by id
   def updateTuple(self, tupleId, tupleData):
-    raise NotImplementedError
+    pId = tupleId.pageId
+    page = self.bufferPool.getPage(pId)
+    page.putTuple(tupleId, tupleData)
+    self.bufferPool.updateBuffer(pId, page.pack())
+    # raise NotImplementedError
 
 
   # Iterators
