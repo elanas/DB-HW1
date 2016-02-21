@@ -1,4 +1,5 @@
 import io, math, os, os.path, random, time, timeit
+import sys
 
 from Catalog.Schema        import DBSchema
 from Storage.StorageEngine import StorageEngine
@@ -210,9 +211,13 @@ class WorkloadGenerator:
         tuplesRead += 1
     
     end = time.time()
-    print("Tuples: " + str(tuplesRead))
-    print("Throughput: " + str(tuplesRead / (end - start)))
-    print("Execution time: " + str(end - start))
+    #print("Tuples: " + str(tuplesRead))
+    #print("Throughput: " + str(tuplesRead / (end - start)))
+    #print("Execution time: " + str(end - start))
+
+    sys.stdout.write(str(tuplesRead / (end - start)) + '\n')
+
+
 
   # Randomized access for 1/fraction read operations on the 
   # stored tuples for the given relations.
@@ -245,9 +250,10 @@ class WorkloadGenerator:
           tuplesRead += 1
 
     end = time.time()
-    print("Tuples: " + str(tuplesRead))
-    print("Throughput: " + str(tuplesRead / (end - start)))
-    print("Execution time: " + str(end - start))
+#    print("Tuples: " + str(tuplesRead))
+#    print("Throughput: " + str(tuplesRead / (end - start)))
+#    print("Execution time: " + str(end - start))
+    sys.stdout.write(str(tuplesRead / (end - start)) + '\n')
 
   # Dispatch a workload mode.
   def runOperations(self, storageEngine, mode):
