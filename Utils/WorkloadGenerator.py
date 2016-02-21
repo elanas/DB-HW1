@@ -67,6 +67,14 @@ class WorkloadGenerator:
     random.seed(a=12345)
     self.initializeSchemas()
 
+  def get_size(self, start_path = "data/"):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size
+
   # Create schemas for the TPC-H dataset
   def initializeSchemas(self):
     tpchNamesAndFields = [
@@ -215,7 +223,10 @@ class WorkloadGenerator:
     #print("Throughput: " + str(tuplesRead / (end - start)))
     #print("Execution time: " + str(end - start))
 
-    sys.stdout.write(str(tuplesRead / (end - start)) + '\n')
+    sys.stdout.write(str(tuplesRead / (end - start)) + ", ")
+    #sys.stdout.write(str(sum(os.path.getsize("../data/" + f) for f in os.listdir('../data') if os.path.isfile("../data/" + f))))
+    sys.stdout.write(str(self.get_size()))
+    sys.stdout.write("\n")
 
 
 
@@ -253,7 +264,12 @@ class WorkloadGenerator:
 #    print("Tuples: " + str(tuplesRead))
 #    print("Throughput: " + str(tuplesRead / (end - start)))
 #    print("Execution time: " + str(end - start))
-    sys.stdout.write(str(tuplesRead / (end - start)) + '\n')
+
+    sys.stdout.write(str(tuplesRead / (end - start)) + ", ")
+    #sys.stdout.write(str(sum(os.path.getsize("../data/" + f) for f in os.listdir('../data') if os.path.isfile("../data/" + f))))
+    sys.stdout.write(str(self.get_size()))
+    sys.stdout.write("\n")
+
 
   # Dispatch a workload mode.
   def runOperations(self, storageEngine, mode):

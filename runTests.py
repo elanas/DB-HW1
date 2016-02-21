@@ -26,16 +26,25 @@ StorageFile.defaultPageClass = Page
 for pageSize in [4096, 32768]:
   for scaleFactor in [0.2, 0.4, 0.6, 0.8, 1.0]:
     for workloadMode in [1, 2, 3, 4]:
-      sys.stdout.write("Page, " + str(pageSize) + ", " + str(scaleFactor) + ", " + str(workloadMode) + ", ")
-      wg = WorkloadGenerator()
-      wg.runWorkload(dataDir, scaleFactor, pageSize, workloadMode)
+      try:
+        sys.stdout.write("Page, " + str(pageSize) + ", " + str(scaleFactor) + ", " + str(workloadMode) + ", ")
+        wg = WorkloadGenerator()
+        wg.runWorkload(dataDir, scaleFactor, pageSize, workloadMode)
+      except:
+        sys.stdout.write("Error, Error\n")
 
 StorageFile.defaultPageClass = SlottedPage
 for pageSize in [4096, 32768]:
   for scaleFactor in [0.2, 0.4, 0.6, 0.8, 1.0]:
     for workloadMode in [1, 2, 3, 4]:
-      sys.stdout.write("SlottedPage, " + str(pageSize) + ", " + str(scaleFactor) + ", " + str(workloadMode) + ", ")
-      wg = WorkloadGenerator()
-      wg = WorkloadGenerator()
-      wg.runWorkload(dataDir, scaleFactor, pageSize, workloadMode)
+      try:
+        sys.stdout.write("SlottedPage, " + str(pageSize) + ", " + str(scaleFactor) + ", " + str(workloadMode) + ", ")
+        wg = WorkloadGenerator()
+        wg.runWorkload(dataDir, scaleFactor, pageSize, workloadMode)
+      except:
+        sys.stdout.write("Error, Error\n")
+
+
+
+
 
